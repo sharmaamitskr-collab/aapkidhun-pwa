@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AapkiDhun</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">AD</div>
+      <div>
+        <div class="title">AapkiDhun</div>
+        <div class="subtitle">Universal Meta Music Prompt Studio</div>
+      </div>
+    </div>
+    <button id="btnInstall" class="btn ghost">Install</button>
+  </header>
+  <nav class="nav">
+    <button class="tab active" data-view="home">Home</button>
+    <button class="tab" data-view="prompt">Create Prompt</button>
+    <button class="tab" data-view="presets">Presets</button>
+    <button class="tab" data-view="recorder">Voice Recorder</button>
+    <button class="tab" data-view="help">Help</button>
+  </nav>
+  <main class="container">
+    <section class="view" id="view-home">
+      <div class="card hero">
+        <h1>Jaisa aap bolenge, waisa prompt बनेगा</h1>
+        <p class="muted">Workflow: Preview → Approve → Lyrics → Final</p>
+        <div class="grid2">
+          <button class="btn" data-goto="prompt">Create Prompt</button>
+          <button class="btn" data-goto="presets">Open Presets</button>
+          <button class="btn" data-goto="recorder">Voice Recorder</button>
+          <button class="btn" data-goto="help">Install / Help</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Reference vibe</h2>
+        <p class="muted">
+          <a href="https://www.youtube.com/watch?v=Gz_j8pPvjfI" target="_blank">
+            Devar Mharo Re — Rajasthani Holi Dhamal (YouTube)
+          </a>
+        </p>
+      </div>
+    </section>
+    <section class="view hidden" id="view-prompt">
+      <div class="card">
+        <h2>Create Universal Prompt</h2>
+        <form id="promptForm" class="form">
+          <div class="row"><label>MODE</label><select name="mode"><option>Regional Folk</option><option>Holi Dhamal</option><option>Bhajan</option><option>Song</option><option>Instrumental</option></select></div>
+          <div class="row"><label>LANGUAGE</label><select name="language"><option>Marwadi</option><option>Hindi</option><option>English</option></select></div>
+          <div class="row"><label>THEME</label><input name="theme" placeholder="e.g., Fagun Holi masti" required /></div>
+          <div class="row"><label>STYLE PACK</label><input name="stylePack" placeholder="e.g., Rajasthani-Marwadi" required /></div>
+          <div class="row"><label>TEMPO</label><input name="tempo" placeholder="e.g., 118 BPM" /></div>
+          <div class="row"><label>RHYTHM</label><input name="rhythm" placeholder="e.g., Dhamal 4/4 swing" /></div>
+          <div class="row"><label>INSTRUMENTS</label><input name="instruments" placeholder="Chang, Khartal, Dholak..." /></div>
+          <div class="row"><label>VOCAL</label><select name="vocal"><option>None</option><option>AI Female Folk + Chorus</option><option>AI Male Folk</option><option>My Recorded Voice</option></select></div>
+          <div class="row"><label>DURATION</label><input name="duration" value="Unlimited" /></div>
+          <div class="row"><label>PREVIEW FIRST</label><select name="previewFirst"><option>YES (3 previews, 20 sec)</option><option>NO</option></select></div>
+          <div class="row"><label>LYRICS RULE</label><input name="lyricsRule" value="Clear pronunciation, short hook, call-response" /></div>
+          <div class="row"><label>REFERENCE</label><input name="reference" placeholder="YouTube/audio link" /></div>
+          <div class="actions">
+            <button class="btn" type="submit">Generate Prompt</button>
+            <button class="btn ghost" type="button" id="btnSavePreset">Save as Preset</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Generated Prompt</h2>
+        <textarea id="promptOut" class="out" rows="14" readonly></textarea>
+        <div class="actions">
+          <button class="btn" id="btnCopy">Copy</button>
+          <button class="btn ghost" id="btnClear">Clear</button>
+        </div>
+      </div>
+    </section>
+    <section class="view hidden" id="view-presets">
+      <div class="card"><h2>Presets</h2><div id="presetList" class="presetList"></div></div>
+      <div class="card"><h2>My Saved Presets</h2><div id="myPresetList" class="presetList"></div></div>
+    </section>
+    <section class="view hidden" id="view-recorder">
+      <div class="card">
+        <h2>Voice Recorder</h2>
+        <p class="muted">Recording se pehle 2 claps ya "1-2-3" bolein (sync marker).</p>
+        <div class="rec">
+          <button class="btn" id="btnRec">Start Recording</button>
+          <button class="btn ghost" id="btnStop" disabled>Stop</button>
+          <a class="btn ghost" id="btnDownload" download="aapkidhun_voice.webm" style="pointer-events:none;opacity:.5;">Download</a>
+        </div>
+        <audio id="playback" controls class="audio"></audio>
+      </div>
+    </section>
+    <section class="view hidden" id="view-help">
+      <div class="card">
+        <h2>Install (PWA)</h2>
+        <div class="grid2">
+          <div class="mini"><h3>Android (Chrome)</h3><ol><li>Website open</li><li>Menu ⋮ → Install app</li><li>Done!</li></ol></div>
+          <div class="mini"><h3>iPhone (Safari)</h3><ol><li>Safari me open</li><li>Share → Add to Home Screen</li><li>Done!</li></ol></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><span class="muted small">AapkiDhun PWA • Prompt Studio</span></footer>
+  <script src="app.js"></script>
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
+    }
+  </script>
+</body>
+</html>
+
