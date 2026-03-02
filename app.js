@@ -1,19 +1,19 @@
-const views=["home","prompt","presets","recorder","transcribe","analyze","lyrics","help"];
+const views=["home","prompt","presets","recorder","transcribe","analyze","lyrics","player","help"];
 const $=(q)=>document.querySelector(q);
 function show(view){views.forEach(v=>{const el=$(`#view-${v}`);if(!el)return;el.classList.toggle("hidden",v!==view)});document.querySelectorAll(".tab").forEach(b=>{b.classList.toggle("active",b.dataset.view===view)});window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(b=>{b.addEventListener("click",()=>show(b.dataset.view))});
 document.querySelectorAll("[data-goto]").forEach(b=>{b.addEventListener("click",()=>show(b.dataset.goto))});
 
-// PROMPT BUILDER
-function buildPrompt(d){const lines=[`MODE: ${d.mode}`,`LANGUAGE: ${d.language}`,`THEME: ${d.theme}`,`STYLE PACK: ${d.stylePack}`,d.tempo?`TEMPO: ${d.tempo}`:"",d.rhythm?`RHYTHM: ${d.rhythm}`:"",d.instruments?`INSTRUMENTS: ${d.instruments}`:"",`VOCAL: ${d.vocal}`,`DURATION: ${d.duration||"Unlimited"}`,`PREVIEW FIRST: ${d.previewFirst}`,d.lyricsRule?`LYRICS RULE: ${d.lyricsRule}`:"",d.reference?`REFERENCE: ${d.reference}`:""].filter(Boolean);return lines.join("\n")}
+// PROMPT
+function buildPrompt(d){const lines=[`MODE: ${d.mode}`,`LANGUAGE: ${d.language}`,`THEME: ${d.theme}`,d.stylePack?`STYLE PACK: ${d.stylePack}`:"",d.tempo?`TEMPO: ${d.tempo}`:"",d.rhythm?`RHYTHM: ${d.rhythm}`:"",d.instruments?`INSTRUMENTS: ${d.instruments}`:"",`VOCAL: ${d.vocal}`,`DURATION: ${d.duration||"Unlimited"}`,`PREVIEW FIRST: ${d.previewFirst}`,d.lyricsRule?`LYRICS RULE: ${d.lyricsRule}`:"",d.reference?`REFERENCE: ${d.reference}`:""].filter(Boolean);return lines.join("\n")}
 $("#promptForm").addEventListener("submit",(e)=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target).entries());$("#promptOut").value=buildPrompt(d)});
 $("#btnCopy").addEventListener("click",async()=>{const t=$("#promptOut").value.trim();if(!t)return;await navigator.clipboard.writeText(t);alert("Copied!")});
 $("#btnClear").addEventListener("click",()=>{$("#promptOut").value=""});
 
 // PRESETS
 const builtInPresets=[
-{id:"holi",title:"Rajasthani — Fagun Holi Dhamal",meta:"118 BPM • Chang Dhamal",data:{mode:"Holi Dhamal",language:"Marwadi",theme:"Fagun Holi masti, crowd singalong",stylePack:"Rajasthani-Marwadi Chang Dhamal",tempo:"118 BPM",rhythm:"Dhamal 4/4 swing + Chang accents",instruments:"Chang, Dholak, Khartal, Algoza, Harmonium",vocal:"AI Female Folk + Chorus",duration:"Unlimited",previewFirst:"YES (3 previews, 20 sec)",lyricsRule:"Clear pronunciation, short hook, call-response",reference:"https://www.youtube.com/watch?v=Gz_j8pPvjfI"}},
-{id:"bhajan",title:"Pure Bhajan — Harmonium+Tabla",meta:"76 BPM • Keherwa",data:{mode:"Bhajan",language:"Hindi",theme:"Shri Ram bhajan",stylePack:"Bhajan-Pure",tempo:"76 BPM",rhythm:"Keherwa soft",instruments:"Harmonium, Tabla, Tanpura, Manjira",vocal:"My Recorded Voice",duration:"Unlimited",previewFirst:"YES",lyricsRule:"Clear words, slow melody",reference:""}},
+{id:"holi",title:"Rajasthani — Fagun Holi Dhamal",meta:"118 BPM • Chang Dhamal",data:{mode:"Holi Dhamal",language:"Marwadi",theme:"Fagun Holi masti, crowd singalong",stylePack:"Rajasthani-Marwadi Chang Dhamal",tempo:"118 BPM",rhythm:"Dhamal 4/4 swing + Chang accents",instruments:"Chang, Dholak, Khartal, Algoza, Harmonium",vocal:"AI Female Folk + Chorus",duration:"Unlimited",previewFirst:"YES",lyricsRule:"Clear pronunciation, short hook",reference:"https://www.youtube.com/watch?v=Gz_j8pPvjfI"}},
+{id:"bhajan",title:"Pure Bhajan — Harmonium+Tabla",meta:"76 BPM • Keherwa",data:{mode:"Bhajan",language:"Hindi",theme:"Shri Ram bhajan",stylePack:"Bhajan-Pure",tempo:"76 BPM",rhythm:"Keherwa soft",instruments:"Harmonium, Tabla, Tanpura, Manjira",vocal:"My Recorded Voice",duration:"Unlimited",previewFirst:"YES",lyricsRule:"Clear words slow melody",reference:""}},
 {id:"instrumental",title:"Instrumental — Cinematic",meta:"92 BPM • No vocal",data:{mode:"Instrumental",language:"Hindi",theme:"Instrumental only",stylePack:"Instrumental-Core",tempo:"92 BPM",rhythm:"4/4 steady",instruments:"Guitar, Piano, soft percussion",vocal:"None",duration:"Unlimited",previewFirst:"YES",lyricsRule:"N/A",reference:""}}
 ];
 function renderPresets(){const list=$("#presetList");list.innerHTML="";builtInPresets.forEach(p=>{const div=document.createElement("div");div.className="presetItem";div.innerHTML=`<h3>${p.title}</h3><div class="meta">${p.meta}</div><div class="rowbtn"><button class="btn" data-load="${p.id}">Load</button><button class="btn ghost" data-gen="${p.id}">Generate</button></div>`;list.appendChild(div)});list.querySelectorAll("[data-load]").forEach(b=>{b.addEventListener("click",()=>{const p=builtInPresets.find(x=>x.id===b.dataset.load);fillForm(p.data);show("prompt")})});list.querySelectorAll("[data-gen]").forEach(b=>{b.addEventListener("click",()=>{const p=builtInPresets.find(x=>x.id===b.dataset.gen);fillForm(p.data);$("#promptOut").value=buildPrompt(p.data);show("prompt")})})}
@@ -54,68 +54,10 @@ const tg=$("#tGenre");
 transcribePresets.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.label;tg.appendChild(o)});
 tg.addEventListener("change",function(){const p=transcribePresets.find(x=>x.id===this.value);if(p)$("#tInst").value=p.instruments});
 $("#tInst").value=transcribePresets[0].instruments;
-function buildTranscribePrompt(url,genre,inst,key,tempo){return `🎵 UNIVERSAL MUSIC TRANSCRIPTION PROMPT
-==========================================
-SOURCE URL: ${url}
-GENRE: ${genre}
-INSTRUMENTS: ${inst}
-KEY: ${key||"Auto-detect"}
-TEMPO: ${tempo||"Auto-detect BPM"}
-==========================================
-A) SUMMARY
-1. Title + Source info
-2. Detected Key (with enharmonic spellings)
-3. BPM + all tempo changes with timestamps
-4. Time Signature(s) with timestamps
-5. Arrangement Map:
-   [Intro] 0:00-0:XX instruments: ...
-   [Verse] 0:XX-0:XX instruments: ...
-   [Chorus] 0:XX-0:XX instruments: ...
-   [Outro] 0:XX-end instruments: ...
-
-B) MELODY & HARMONY
-1. Melody note-by-note with octave numbers
-   e.g. E4(q) D#4(e) F#4(h) G4(q)
-2. Chord progression per measure:
-   ||: Am | G | F | E :||
-3. Roman numeral analysis relative to key
-4. Timestamps + confidence score per phrase
-
-C) INSTRUMENTATION
-For EACH instrument:
-• Name (specific) + Role
-• 1-2 bar rhythmic loop pattern
-• Timbre description
-• MIDI channel + patch suggestion
-• Pan + volume level
-
-D) PERCUSSION / RHYTHM
-• Bar-by-bar groove notation
-• Accent points + ghost notes
-• 4-bar loop transcription
-• Sync timestamps (where beat 1 falls)
-
-E) ARRANGEMENT NOTES
-• Entry/exit timestamp per instrument
-• Dynamics: p / mp / mf / f
-• Harmony voicing suggestions
-
-F) DAW RECREATION
-• Channel list + pan + volume
-• VST/sample plugin suggestions
-• Reverb/delay/EQ per channel
-
-G) CONFIDENCE SCORES
-• Per-section pitch accuracy (0.0-1.0)
-• Flag ambiguous notes with 2 alternatives
-==========================================
-OUTPUT:
-[1] ABC NOTATION (MIDI-ready copy-paste)
-[2] PLAIN TEXT (PDF-printable)
-==========================================`}
+function buildTranscribePrompt(url,genre,inst,key,tempo){return `🎵 UNIVERSAL MUSIC TRANSCRIPTION PROMPT\n==========================================\nSOURCE: ${url}\nGENRE: ${genre}\nINSTRUMENTS: ${inst}\nKEY: ${key||"Auto-detect"}\nTEMPO: ${tempo||"Auto-detect"}\n==========================================\nA) SUMMARY: Title, Key, BPM, Time Sig, Arrangement Map\nB) MELODY: Note-by-note octave + timestamps + confidence\nC) CHORDS: Per measure + Roman numeral\nD) INSTRUMENTS: Role + loop + MIDI map + pan + volume\nE) PERCUSSION: Bar-by-bar + 4-bar loop + sync timestamps\nF) ARRANGEMENT: Entry/exit + dynamics\nG) DAW: Channels, pan, VST, FX\nH) CONFIDENCE: Per-section (0-1) + alternatives\n==========================================\nOUTPUT: [1] ABC Notation [2] Plain Text PDF\n==========================================`}
 $("#tForm").addEventListener("submit",(e)=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target).entries());const p=transcribePresets.find(x=>x.id===d.gp);$("#tText").value=buildTranscribePrompt(d.url,p?p.genre:d.gp,d.inst,d.key,d.tempo);$("#tOut").style.display="block"});
 $("#tCopy").addEventListener("click",async()=>{await navigator.clipboard.writeText($("#tText").value);alert("Copied!")});
-$("#tPDF").addEventListener("click",()=>{printText("tText","Transcription Prompt")});
+$("#tPDF").addEventListener("click",()=>printText("tText","Transcription Prompt"));
 
 // ANALYZE TABS
 document.querySelectorAll(".atab").forEach(b=>{
@@ -134,7 +76,6 @@ function printText(id,title){const t=document.getElementById(id).value;const w=w
 $("#btnUpload").addEventListener("click",()=>$("#fileInput").click());
 $("#uploadBox").addEventListener("click",(e)=>{if(e.target.id!=="btnUpload")$("#fileInput").click()});
 $("#fileInput").addEventListener("change",function(){if(!this.files[0])return;const f=this.files[0];$("#fileName").textContent=f.name;$("#fileSize").textContent=`(${(f.size/1024/1024).toFixed(2)} MB)`;$("#fileInfo").style.display="flex"});
-
 $("#analyzeForm").addEventListener("submit",(e)=>{
   e.preventDefault();
   const d=Object.fromEntries(new FormData(e.target).entries());
@@ -142,175 +83,15 @@ $("#analyzeForm").addEventListener("submit",(e)=>{
   const onlineLink=$("#onlineLink").value.trim();
   const fileEl=$("#fileInput").files[0];
   let src="[source]";
-  if(activeTab==="link"&&onlineLink){src=onlineLink}
-  else if(activeTab==="file"&&fileEl){src=fileEl.name}
-  else if(activeTab==="link"&&!onlineLink){alert("Link dalo pehle!");return}
-  else if(activeTab==="file"&&!fileEl){alert("File select karo pehle!");return}
-  const genre=d.aGenre;const key=d.aKey||"Auto-detect";const bpm=d.aBpm||"Auto-detect";const vocal=d.aVocal;
-
-  document.getElementById("beatPrompt").value=`🥁 BEAT + RHYTHM SYNC PROMPT
-==========================================
-SOURCE: ${src}
-GENRE: ${genre} | BPM: ${bpm}
-==========================================
-Analyze this audio and provide EXACT:
-
-1. BPM (auto-detect) + all tempo changes with timestamps
-2. TIME SIGNATURE + any changes with timestamps
-3. BEAT MAP — every bar:
-   Bar 1: BEAT1(strong) beat2 BEAT3 beat4
-   Bar 2: ...
-4. GROOVE PATTERN (1-4 bar loop in notation):
-   e.g. Dha-ge-na-Ti Dha-ge-na-Ti
-   e.g. KICK-hat-SNARE-hat-KICK-hat-SNARE
-5. ACCENT POINTS — strong hit timestamps
-6. FILLS — location + description (timestamp)
-7. SWING/SHUFFLE factor if present
-8. BEAT 1 SYNC TIMESTAMPS:
-   Every bar start: 0:00.00, 0:02.03, 0:04.06...
-9. DAW GRID SETTINGS:
-   BPM: ${bpm}
-   Quantize: 1/16
-   Swing: [detected %]
-10. PERCUSSION INSTRUMENTS LIST with roles
-==========================================
-OUTPUT: Plain text beat map + ABC percussion`;
-
-  document.getElementById("instrPrompt").value=`🎸 INSTRUMENTS DETECTION PROMPT
-==========================================
-SOURCE: ${src}
-GENRE: ${genre} | KEY: ${key} | BPM: ${bpm}
-==========================================
-Detect ALL instruments. For EACH provide:
-
-1. INSTRUMENT NAME (specific, not generic)
-2. ROLE: rhythm/melody/bass/pad/drone/ornament
-3. ENTRY timestamp
-4. EXIT timestamp
-5. ACTIVE SECTIONS: Intro/Verse/Chorus/Bridge
-6. RHYTHMIC PATTERN (1-2 bar loop):
-   e.g. Chang: X . . x . X . x (X=hit .=rest)
-7. PITCH RANGE: lowest → highest note
-8. TIMBRE: bright/warm/dry/wet/nasal/resonant
-9. MIDI MAPPING:
-   Channel: [1-16]
-   GM Patch: [name]
-   Velocity: [range 0-127]
-10. MIX:
-    Pan: L30/C/R30
-    Volume: [0-100]
-    FX: [reverb/delay/compression]
-
-PROVIDE ALSO:
-• Full instrument timeline table
-• Which instruments play together (layers)
-• Any microtonal/non-western tuning notes
-• Suggested sample packs for recreation
-==========================================
-OUTPUT: Per-instrument table + loop notation`;
-
-  document.getElementById("vocalPrompt").value=`🎤 VOCAL ANALYSIS PROMPT
-==========================================
-SOURCE: ${src}
-VOCAL: ${vocal} | GENRE: ${genre} | KEY: ${key}
-==========================================
-Analyze ONLY vocals. Provide:
-
-1. VOCAL TYPE: ${vocal}
-2. LEAD VOCAL MELODY:
-   • Pitch range (e.g. C3-G5)
-   • Note-by-note with octave:
-     0:15 → B4(q) A4(e) G4(e) E4(h)
-   • Confidence per phrase (0.0-1.0)
-3. HARMONY/CHORUS VOCALS:
-   • Number of voices
-   • Harmony interval (3rd/5th/octave)
-   • Entry/exit timestamps
-4. ORNAMENTS (non-western):
-   • Meend (glide): from→to note, timestamp
-   • Gamak (oscillation): note+speed, timestamp
-   • Murki (grace notes): timestamp
-   • Microtonal bends >50 cents: mark "approx"
-5. LYRICS:
-   • Line-by-line phonetic transcription
-   • Timestamp per line
-   • Syllable count per line
-6. BREATH MARKS + PHRASE LENGTHS
-7. VOCAL STYLE TAGS:
-   e.g. nasal, breathy, powerful, devotional
-8. VOCAL RECREATION GUIDE:
-   • Suggested VST/plugin
-   • Pitch correction: amount + speed
-   • Reverb: room size + wet %
-   • Compression settings
-==========================================
-OUTPUT: Note sequence + lyrics + confidence`;
-
-  document.getElementById("fullPrompt").value=`🎵 FULL COMPOSITION ANALYSIS PROMPT
-==========================================
-SOURCE: ${src}
-GENRE: ${genre} | KEY: ${key} | BPM: ${bpm}
-VOCAL: ${vocal}
-==========================================
-COMPLETE ANALYSIS:
-
-A) OVERVIEW
-• Key: ${key} (enharmonic spelling + scale notes)
-• BPM: ${bpm} + all tempo changes
-• Time Signature + changes
-• Total duration + section count
-
-B) ARRANGEMENT MAP (with timestamps)
-[Intro]  0:00-0:XX  instruments: ...
-[Verse1] 0:XX-0:XX  instruments: ...
-[Chorus] 0:XX-0:XX  instruments: ...
-[Verse2] 0:XX-0:XX  instruments: ...
-[Bridge] 0:XX-0:XX  instruments: ...
-[Outro]  0:XX-end   instruments: ...
-
-C) MELODY (complete)
-• Full note sequence with octave + timing
-• Chord progression: ||: Am | G | F | E :||
-• Roman numeral: i-VII-VI-V
-• Key modulations (if any)
-
-D) ALL INSTRUMENTS
-(See Instruments Prompt — full detail)
-
-E) BEAT SYNC
-(See Beat Prompt — full detail)
-
-F) VOCAL
-(See Vocal Prompt — full detail)
-
-G) NEW COMPOSITION GUIDE
-To create NEW original song in same style:
-1. Keep: BPM ${bpm} + time signature
-2. Key: ${key} — use same scale
-3. Change: melody, lyrics, arrangement
-4. New structure:
-   Intro(8 bars) Verse(16) Chorus(8) Bridge(8) Outro(4)
-5. Instruments to use: [detected list]
-6. Avoid: copying any melody/lyrics from source
-
-H) SUNO/UDIO AI PROMPT
-Ready-to-use AI music generation prompt:
-[genre] [mood] [instruments] [bpm] [vocal style]
-[key] [feel] [reference style — not exact copy]
-
-I) DAW TEMPLATE
-• Track list with settings
-• Plugin suggestions
-• Mix template
-
-J) ABC NOTATION (full song MIDI-ready)
-
-K) CONFIDENCE SCORES
-• Per section accuracy (0.0-1.0)
-• Ambiguous passages + alternatives
-==========================================
-OUTPUT: Complete analysis + ABC + DAW guide`;
-
+  if(activeTab==="link"&&onlineLink)src=onlineLink;
+  else if(activeTab==="file"&&fileEl)src=fileEl.name;
+  else if(activeTab==="link"&&!onlineLink){alert("Link dalo!");return}
+  else if(activeTab==="file"&&!fileEl){alert("File select karo!");return}
+  const genre=d.aGenre,key=d.aKey||"Auto-detect",bpm=d.aBpm||"Auto-detect",vocal=d.aVocal;
+  document.getElementById("beatPrompt").value=`🥁 BEAT + RHYTHM SYNC PROMPT\n==========================================\nSOURCE: ${src}\nGENRE: ${genre} | BPM: ${bpm}\n==========================================\n1. EXACT BPM + tempo changes with timestamps\n2. TIME SIGNATURE + changes\n3. BEAT MAP every bar:\n   Bar 1: BEAT1(strong) beat2 BEAT3 beat4\n4. GROOVE PATTERN 1-4 bar loop\n5. ACCENT POINTS timestamps\n6. FILLS location + description\n7. SWING/SHUFFLE factor\n8. BEAT 1 SYNC TIMESTAMPS:\n   0:00.00, 0:02.03, 0:04.06...\n9. DAW GRID: BPM:${bpm} Quantize:1/16\n10. PERCUSSION INSTRUMENTS LIST\n==========================================\nOUTPUT: Beat map + ABC percussion`;
+  document.getElementById("instrPrompt").value=`🎸 INSTRUMENTS DETECTION PROMPT\n==========================================\nSOURCE: ${src}\nGENRE: ${genre} | KEY: ${key} | BPM: ${bpm}\n==========================================\nFor EACH instrument:\n1. NAME (specific)\n2. ROLE: rhythm/melody/bass/pad/drone\n3. ENTRY + EXIT timestamp\n4. SECTIONS active in\n5. RHYTHMIC PATTERN 1-2 bar loop\n6. PITCH RANGE\n7. TIMBRE description\n8. MIDI: Channel + GM Patch + Velocity\n9. MIX: Pan + Volume + FX\nALSO:\n- Instrument timeline table\n- Layer combinations\n- Microtonal notes\n- Sample pack suggestions\n==========================================\nOUTPUT: Instrument table + loop notation`;
+  document.getElementById("vocalPrompt").value=`🎤 VOCAL ANALYSIS PROMPT\n==========================================\nSOURCE: ${src}\nVOCAL: ${vocal} | GENRE: ${genre} | KEY: ${key}\n==========================================\n1. VOCAL TYPE: ${vocal}\n2. LEAD MELODY:\n   - Pitch range\n   - Note-by-note: 0:15 B4(q) A4(e) G4(h)\n   - Confidence per phrase\n3. HARMONY: voices + interval + timestamps\n4. ORNAMENTS: Meend, Gamak, Murki, bends\n5. LYRICS: phonetic + timestamps + syllables\n6. BREATH MARKS + PHRASES\n7. STYLE TAGS\n8. RECREATION: VST + pitch correct + FX\n==========================================\nOUTPUT: Notes + lyrics + confidence`;
+  document.getElementById("fullPrompt").value=`🎵 FULL COMPOSITION PROMPT\n==========================================\nSOURCE: ${src}\nGENRE: ${genre} | KEY: ${key} | BPM: ${bpm}\nVOCAL: ${vocal}\n==========================================\nA) OVERVIEW: Key, BPM, Time Sig, Duration\nB) ARRANGEMENT MAP with timestamps\nC) MELODY: notes + chords + roman numerals\nD) ALL INSTRUMENTS (detailed)\nE) BEAT SYNC (detailed)\nF) VOCAL (detailed)\nG) NEW COMPOSITION GUIDE:\n   - Same BPM + key\n   - Different melody + lyrics\n   - Structure: Intro(8) Verse(16) Chorus(8) Bridge(8) Outro(4)\nH) SUNO/UDIO AI PROMPT (ready to use)\nI) DAW TEMPLATE\nJ) ABC NOTATION (MIDI ready)\nK) CONFIDENCE SCORES\n==========================================\nOUTPUT: Full analysis + ABC + DAW guide`;
   $("#analyzeOut").style.display="block";
   setTimeout(()=>document.getElementById("analyzeOut").scrollIntoView({behavior:"smooth"}),100);
 });
@@ -330,51 +111,7 @@ document.querySelectorAll(".lmode").forEach(b=>{
 $("#newLyricsForm").addEventListener("submit",(e)=>{
   e.preventDefault();
   const d=Object.fromEntries(new FormData(e.target).entries());
-  document.getElementById("newLyricsText").value=`✍️ NEW LYRICS COMPOSITION PROMPT
-==========================================
-GENRE: ${d.lg}
-LANGUAGE: ${d.ll}
-THEME: ${d.ltheme}
-MOOD: ${d.lmood}
-STRUCTURE: ${d.lstruct}
-VOCAL: ${d.lvocal}
-SPECIAL: ${d.lspecial||"None"}
-==========================================
-Write COMPLETE ORIGINAL LYRICS:
-
-RULES:
-• Language: ${d.ll} ONLY
-• Mood: ${d.lmood}
-• Theme: ${d.ltheme}
-• Rhyme scheme: AABB or ABAB
-• Max 8 syllables per line (singable)
-• NO copying existing songs
-• Label each section clearly
-
-STRUCTURE TO FOLLOW: ${d.lstruct}
-
-FORMAT:
-[Mukhda / Hook]
-(4-8 catchy lines — sets the theme)
-
-[Antara 1 / Verse 1]
-(4-8 lines — expands theme)
-
-[Antara 2 / Verse 2]
-(4-8 lines — new angle)
-
-[Bridge] (optional)
-(2-4 lines — emotional peak)
-
-ALSO PROVIDE:
-• Syllable count per line
-• Rhyme scheme used
-• Suggested BPM range
-• Melody contour (HIGH/mid/low per line)
-• AI music generation tags:
-  [genre] [mood] [instruments] [vocal style]
-==========================================
-OUTPUT: Complete lyrics + melody hints + AI tags`;
+  document.getElementById("newLyricsText").value=`✍️ NEW LYRICS PROMPT\n==========================================\nGENRE: ${d.lg} | LANGUAGE: ${d.ll}\nTHEME: ${d.ltheme} | MOOD: ${d.lmood}\nSTRUCTURE: ${d.lstruct} | VOCAL: ${d.lvocal}\nSPECIAL: ${d.lspecial||"None"}\n==========================================\nWrite COMPLETE ORIGINAL LYRICS:\nRULES:\n- Language: ${d.ll} ONLY\n- Mood: ${d.lmood}, Theme: ${d.ltheme}\n- Rhyme: AABB or ABAB\n- Max 8 syllables per line\n- NO copying existing songs\n\n[Mukhda/Hook] 4-8 catchy lines\n[Antara 1] 4-8 lines expand theme\n[Antara 2] 4-8 lines new angle\n[Bridge] 2-4 lines emotional peak\n\nALSO PROVIDE:\n- Syllable count per line\n- Melody contour HIGH/mid/low\n- BPM range suggestion\n- AI music tags for Suno/Udio\n==========================================`;
   document.getElementById("newLyricsOut").style.display="block";
 });
 
@@ -383,47 +120,7 @@ $("#origLyricsForm").addEventListener("submit",(e)=>{
   e.preventDefault();
   const d=Object.fromEntries(new FormData(e.target).entries());
   const lyrics=e.target.olyrics.value;
-  document.getElementById("origLyricsText").value=`📜 ORIGINAL LYRICS MUSIC PROMPT
-==========================================
-SONG: ${d.otitle}
-GENRE: ${d.og}
-BPM: ${d.obpm||"Auto-suggest"}
-==========================================
-MY LYRICS:
-${lyrics}
-==========================================
-Based on my lyrics above, provide:
-
-1. MELODY SUGGESTION:
-   • Note sequence per line with octave
-   • Syllable-to-note mapping
-   • Octave range suggestion
-
-2. RHYTHM MAPPING:
-   • Beat placement per syllable
-   • Stress/accent marks
-   • BPM suggestion: ${d.obpm||"auto"}
-
-3. CHORD PROGRESSION:
-   • Suggested chords per line
-   • Key suggestion
-   • Roman numeral analysis
-
-4. MUSIC ARRANGEMENT:
-   • Instruments (based on genre: ${d.og})
-   • Intro/Outro ideas
-   • Section structure
-
-5. AI MUSIC PROMPT (Suno/Udio ready):
-   Complete prompt with genre, mood,
-   instruments, vocal style, BPM, key
-
-6. IMPROVEMENTS:
-   • Rhyme suggestions
-   • Flow/meter improvements
-   • Alternative stronger lines
-==========================================
-OUTPUT: Melody notes + chords + AI prompt`;
+  document.getElementById("origLyricsText").value=`📜 ORIGINAL LYRICS PROMPT\n==========================================\nSONG: ${d.otitle} | GENRE: ${d.og} | BPM: ${d.obpm||"auto"}\n==========================================\nMY LYRICS:\n${lyrics}\n==========================================\nProvide:\n1. MELODY: note sequence + octave per line\n2. RHYTHM: beat placement + BPM suggestion\n3. CHORDS: progression + key + roman numerals\n4. ARRANGEMENT: instruments + intro/outro\n5. AI PROMPT: Suno/Udio ready\n6. IMPROVEMENTS: rhyme + flow + alternatives\n==========================================`;
   document.getElementById("origLyricsOut").style.display="block";
 });
 
@@ -432,61 +129,124 @@ $("#refLyricsForm").addEventListener("submit",(e)=>{
   e.preventDefault();
   const d=Object.fromEntries(new FormData(e.target).entries());
   const reflyrics=e.target.rlyrics.value;
-  document.getElementById("refLyricsText").value=`🎵 REFERENCE-BASED NEW LYRICS PROMPT
-==========================================
-REFERENCE URL: ${d.rurl||"Not provided"}
-REFERENCE LYRICS:
-${reflyrics||"[Please detect/analyze from URL above]"}
-==========================================
-NEW COMPOSITION:
-THEME: ${d.rtheme}
-LANGUAGE: ${d.rlang}
-MOOD: ${d.rmood}
-STRUCTURE: ${d.rstruct}
-STYLE: ${d.rstyle||"Similar rhythmic feel"}
-==========================================
-STEP 1 — ANALYZE REFERENCE:
-• Detect rhythm pattern of lyrics
-• Count syllables per line
-• Identify rhyme scheme (AABB/ABAB/ABCB)
-• Note emotional tone + language style
-• Identify hook/catchphrase pattern
-
-STEP 2 — WRITE NEW ORIGINAL LYRICS:
-• SAME rhythm + syllable count as reference
-• COMPLETELY DIFFERENT words + meaning
-• New theme: ${d.rtheme}
-• Mood: ${d.rmood}
-• Language: ${d.rlang}
-• STRICT RULE: Zero copying from reference
-
-FORMAT:
-[Mukhda / Hook]
-(match reference syllable pattern)
-
-[Antara 1 / Verse 1]
-(match reference rhythm)
-
-[Antara 2 / Verse 2]
-(match reference rhythm)
-
-STEP 3 — PROVIDE:
-• Syllable count per line (verify matches)
-• Rhyme scheme used
-• Pronunciation guide for difficult words
-• Melody contour (HIGH/mid/low)
-
-STEP 4 — AI MUSIC GENERATION PROMPT:
-Complete Suno/Udio prompt:
-• Genre tags
-• Mood/feel tags
-• Instrument tags
-• Vocal style
-• BPM + key
-• Style reference (NOT exact copy)
-==========================================
-OUTPUT: New lyrics + syllable map + AI prompt`;
+  document.getElementById("refLyricsText").value=`🎵 REFERENCE-BASED LYRICS PROMPT\n==========================================\nREF URL: ${d.rurl||"Not provided"}\nREF LYRICS:\n${reflyrics||"[Detect from URL]"}\n==========================================\nNEW: THEME:${d.rtheme} | LANG:${d.rlang} | MOOD:${d.rmood}\nSTRUCTURE: ${d.rstruct} | STYLE: ${d.rstyle||"Similar feel"}\n==========================================\nSTEP 1 - ANALYZE REFERENCE:\n- Syllable count per line\n- Rhyme scheme\n- Rhythmic pattern\n- Emotional tone\n\nSTEP 2 - WRITE NEW LYRICS:\n- SAME rhythm + syllable count\n- DIFFERENT words + meaning\n- Theme: ${d.rtheme}, Mood: ${d.rmood}\n- Language: ${d.rlang}\n- ZERO copying from reference\n\n[Mukhda] match reference pattern\n[Antara 1] match rhythm\n[Antara 2] match rhythm\n\nSTEP 3 - PROVIDE:\n- Syllable map + rhyme scheme\n- Pronunciation guide\n- Melody contour\n\nSTEP 4 - AI PROMPT:\nSuno/Udio ready with all tags\n==========================================`;
   document.getElementById("refLyricsOut").style.display="block";
 });
+
+// ===== MUSIC PLAYER =====
+let playlist=[];
+let currentTrack=0;
+const mainPlayer=$("#mainPlayer");
+
+function formatTime(s){if(isNaN(s))return"0:00";const m=Math.floor(s/60);const sec=Math.floor(s%60);return`${m}:${sec<10?"0"+sec:sec}`}
+
+function loadTrack(idx){
+  if(!playlist[idx])return;
+  const track=playlist[idx];
+  mainPlayer.src=track.url;
+  $("#playerTitle").textContent="🎵 "+track.name;
+  $("#pFile").textContent=track.name;
+  $("#playerCard").style.display="block";
+  $("#playerDisc").textContent="🎵";
+  mainPlayer.load();
+  // Auto rotate disc
+  $("#playerDisc").style.animation="none";
+  setTimeout(()=>$("#playerDisc").style.animation="spin 3s linear infinite",10);
+}
+
+function updatePlayBtn(){
+  $("#btnPlayPause").textContent=mainPlayer.paused?"▶️ Play":"⏸️ Pause";
+}
+
+$("#btnPlayerUpload").addEventListener("click",()=>$("#playerFileInput").click());
+$("#playerUploadBox").addEventListener("click",(e)=>{if(e.target.id!=="btnPlayerUpload")$("#playerFileInput").click()});
+
+$("#playerFileInput").addEventListener("change",function(){
+  if(!this.files.length)return;
+  Array.from(this.files).forEach(f=>{
+    const url=URL.createObjectURL(f);
+    playlist.push({name:f.name,url});
+  });
+  currentTrack=playlist.length-this.files.length;
+  loadTrack(currentTrack);
+  renderPlaylist();
+  $("#playerInfo").style.display="block";
+  $("#playerFileName").textContent=playlist[currentTrack].name;
+});
+
+mainPlayer.addEventListener("timeupdate",()=>{
+  $("#pDuration").textContent=formatTime(mainPlayer.currentTime)+" / "+formatTime(mainPlayer.duration);
+});
+
+mainPlayer.addEventListener("ended",()=>{
+  if(currentTrack<playlist.length-1){currentTrack++;loadTrack(currentTrack);mainPlayer.play();renderPlaylist();}
+  updatePlayBtn();
+});
+
+mainPlayer.addEventListener("play",updatePlayBtn);
+mainPlayer.addEventListener("pause",updatePlayBtn);
+
+$("#btnPlayPause").addEventListener("click",()=>{
+  if(mainPlayer.paused)mainPlayer.play();
+  else mainPlayer.pause();
+});
+
+$("#btnNext").addEventListener("click",()=>{
+  if(currentTrack<playlist.length-1){currentTrack++;loadTrack(currentTrack);mainPlayer.play();renderPlaylist();}
+});
+
+$("#btnPrev").addEventListener("click",()=>{
+  if(currentTrack>0){currentTrack--;loadTrack(currentTrack);mainPlayer.play();renderPlaylist();}
+});
+
+$("#btnPlaylist").addEventListener("click",()=>$("#playlistInput").click());
+$("#playlistInput").addEventListener("change",function(){
+  if(!this.files.length)return;
+  Array.from(this.files).forEach(f=>{
+    playlist.push({name:f.name,url:URL.createObjectURL(f)});
+  });
+  renderPlaylist();
+  if(playlist.length===this.files.length){loadTrack(0);}
+});
+
+function renderPlaylist(){
+  const container=document.getElementById("playlistItems");
+  if(!playlist.length){container.innerHTML=`<div class="muted small">No tracks yet.</div>`;return}
+  container.innerHTML="";
+  playlist.forEach((t,i)=>{
+    const div=document.createElement("div");
+    div.className="presetItem";
+    div.style.cursor="pointer";
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;${i===currentTrack?"color:#ff6b00;font-weight:800":""}">${i===currentTrack?"▶️ ":"🎵 "}${t.name}</span>
+      <button class="btn ghost" style="padding:6px 10px;font-size:12px" data-pidx="${i}">Play</button>
+    </div>`;
+    container.appendChild(div);
+  });
+  container.querySelectorAll("[data-pidx]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      currentTrack=+b.dataset.pidx;
+      loadTrack(currentTrack);
+      mainPlayer.play();
+      renderPlaylist();
+    });
+  });
+}
+
+// Add spin animation
+const style=document.createElement("style");
+style.textContent=`
+.player-art{display:flex;justify-content:center;margin:16px 0}
+.player-disc{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#ff6b00,#ffb347);display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 8px 24px rgba(255,107,0,.3)}
+.player-controls{display:flex;gap:10px;justify-content:center;margin:10px 0}
+.analyze-tabs{display:flex;gap:8px;margin:10px 0}
+.atab{padding:8px 14px;border:1.5px solid var(--border);background:#fff;color:var(--text);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600}
+.atab.active{background:linear-gradient(135deg,#ff6b00,#ff8c00);border-color:#ff6b00;color:#fff;font-weight:800}
+.lyric-modes{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.lmode{padding:8px 14px;border:1.5px solid var(--border);background:#fff;color:var(--text);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600}
+.lmode.active{background:linear-gradient(135deg,#ff6b00,#ff8c00);border-color:#ff6b00;color:#fff;font-weight:800}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+`;
+document.head.appendChild(style);
 
 show("home");
