@@ -1,14 +1,3 @@
-🚨 Mil Gaya Bug! app.js Mein JavaScript Errors Hain!
-
-GitHub pe jo app.js save hua hai usme quotes aur backticks corrupt ho gaye hain — isliye poora JavaScript crash ho raha hai aur koi button kaam nahi kar raha!
-
-✅ Fix — Poora app.js Replace Karo
-
-👉 Ye link kholo:
-https://github.com/sharmaamitskr-collab/aapkidhun-pwa/edit/main/app.js
-
-Ctrl+A → Delete → Paste karo ye poora code:
-
 'use strict';
 const $ = id => document.getElementById(id);
 const views = ['home','prompt','presets','recorder','transcribe','analyze','lyrics','nature','player','help'];
@@ -536,10 +525,3 @@ $('mainPlayer')?.addEventListener('ended', () => { if (curTrack < playlist.lengt
 renderPresets();
 renderMyPresets();
 show('home');
-
-Steps:
-1. 👉 https://github.com/sharmaamitskr-collab/aapkidhun-pwa/edit/main/app.js
-2. Ctrl+A → Delete
-3. Upar wala code paste karo
-4. Commit changes dabao
-5. 3 min baad incognito mein check karo ✅
