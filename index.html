@@ -19,7 +19,7 @@
       <div class="subtitle">Universal Music Prompt Studio</div>
     </div>
   </div>
-  <button id="btnInstall" class="btn ghost small">Install</button>
+  <button id="btnInstall" class="btn ghost small hidden">Install</button>
 </header>
 
 <nav class="nav">
@@ -244,33 +244,25 @@
   <div class="card">
     <h2>🎼 Music Transcriber</h2>
     <p class="muted">Phone/Computer file ya online link — dono kaam karenge</p>
-
-    <!-- SOURCE TABS -->
     <div class="upload-tabs">
       <button class="utab active" id="ttabFile">📁 File Upload</button>
       <button class="utab" id="ttabLink">🔗 Online Link</button>
     </div>
-
-    <!-- FILE UPLOAD — iOS FIXED -->
     <div id="tFileArea">
       <div class="upload-box" id="tUploadBox">
         <div class="upload-icon">🎵</div>
         <p>MP3, WAV, M4A, MP4 — Phone/Computer se</p>
-        <!-- FIX: label directly linked — iOS Safari compatible -->
         <input type="file" id="tAudioFile" accept="audio/*,video/*"/>
         <label for="tAudioFile" class="btn" style="display:inline-block;margin-top:8px">📂 Choose File</label>
       </div>
       <div id="tFileInfo" class="hidden"></div>
     </div>
-
-    <!-- LINK INPUT -->
     <div id="tLinkArea" class="hidden">
       <div class="row" style="margin-top:10px">
         <label>MUSIC URL</label>
         <input id="tUrl" placeholder="YouTube, SoundCloud, MP3 link..."/>
       </div>
     </div>
-
     <div class="form" style="margin-top:12px">
       <div class="row"><label>GENRE</label>
         <select id="transcribeGenre"><option value="">-- Auto Detect --</option></select>
@@ -287,7 +279,6 @@
     </div>
     <div class="actions"><button class="btn" id="btnTranscribe">🎼 Generate Music Sheet</button></div>
   </div>
-
   <div class="card hidden" id="transcribeOutCard">
     <h2>📄 Music Sheet Output</h2>
     <textarea id="transcribeOut" class="out sheet-out" rows="24" readonly></textarea>
@@ -308,31 +299,25 @@
   <div class="card">
     <h2>🔬 Music Analyzer</h2>
     <p class="muted">MP3/Video upload karo ya online link — Music Sheet milega</p>
-
     <div class="upload-tabs">
       <button class="utab active" id="utabFile">📁 File Upload</button>
       <button class="utab" id="utabLink">🔗 Online Link</button>
     </div>
-
-    <!-- FILE UPLOAD — iOS FIXED with label -->
     <div id="uploadFileArea">
       <div class="upload-box" id="uploadBox">
         <div class="upload-icon">📁</div>
         <p>MP3, WAV, M4A, MP4 — Phone/Computer se</p>
-        <!-- KEY FIX: input visible + label for iOS -->
         <input type="file" id="audioFile" accept="audio/*,video/*"/>
         <label for="audioFile" class="btn" style="display:inline-block;margin-top:8px">📂 Choose File</label>
       </div>
       <div id="fileInfo" class="hidden"></div>
     </div>
-
     <div id="uploadLinkArea" class="hidden">
       <div class="row" style="margin-top:10px">
         <label>MUSIC URL</label>
         <input id="analyzeUrl" placeholder="YouTube, SoundCloud, MP3 direct link..."/>
       </div>
     </div>
-
     <div class="form" style="margin-top:12px">
       <div class="row"><label>GENRE</label>
         <select id="analyzeGenre">
@@ -367,7 +352,6 @@
     </div>
   </div>
 
-  <!-- OUTPUT TABS -->
   <div class="card hidden" id="analyzeOutCard">
     <div class="result-tabs">
       <button class="rtab active" data-rt="sheet">📄 Full Sheet</button>
@@ -377,7 +361,6 @@
       <button class="rtab" data-rt="suno">🎵 Suno</button>
       <button class="rtab" data-rt="new">✨ New</button>
     </div>
-
     <div id="rt-sheet" class="rt-panel">
       <h3>📄 Full Music Sheet</h3>
       <textarea id="sheetOut" class="out sheet-out" rows="26" readonly></textarea>
@@ -540,14 +523,18 @@
       <form id="origLyricsForm" class="form">
         <textarea name="olLyrics" class="out" rows="5" placeholder="Lyrics paste karo ya neeche URL do..."></textarea>
         <div class="row" style="margin-top:8px"><label>GENRE</label>
-          <select name="olGenre"><option>Auto Detect</option><option>Folk</option>
-          <option>Bhajan</option><option>Bollywood</option><option>Qawwali</option>
-          <option>Hip-Hop</option><option>Pop</option><option>Classical</option></select>
+          <select name="olGenre">
+            <option>Auto Detect</option><option>Folk</option><option>Bhajan</option>
+            <option>Bollywood</option><option>Qawwali</option><option>Hip-Hop</option>
+            <option>Pop</option><option>Classical</option>
+          </select>
         </div>
         <div class="row"><label>LANGUAGE</label>
-          <select name="olLang"><option>Auto Detect</option><option>Hindi</option>
-          <option>Marwadi</option><option>Urdu</option><option>Punjabi</option>
-          <option>English</option><option>Sanskrit</option></select>
+          <select name="olLang">
+            <option>Auto Detect</option><option>Hindi</option><option>Marwadi</option>
+            <option>Urdu</option><option>Punjabi</option><option>English</option>
+            <option>Sanskrit</option>
+          </select>
         </div>
         <div class="actions"><button class="btn" type="submit">🔍 Analyze</button></div>
       </form>
@@ -616,7 +603,9 @@
           <option>Healing</option><option>Romantic</option><option>Epic</option>
         </select>
       </div>
-      <div class="row"><label>BPM</label><input id="natBpm" placeholder="e.g., 60 BPM slow"/></div>
+      <div class="row"><label>BPM</label>
+        <input id="natBpm" placeholder="e.g., 60 BPM slow"/>
+      </div>
     </div>
   </div>
   <div class="card"><h3>🌧️ Water</h3><div class="sound-chips">
@@ -710,7 +699,7 @@
     <h2>🎧 Offline Player</h2>
     <div class="upload-box">
       <div class="upload-icon">🎵</div>
-      <p>MP3 / WAV / M4A / OGG</p>
+      <p>MP3 / WAV / M4A / OGG — Phone se load karo</p>
       <input type="file" id="playerFiles" accept="audio/*" multiple/>
       <label for="playerFiles" class="btn" style="display:inline-block;margin-top:8px">📂 Load Music</label>
     </div>
@@ -719,42 +708,88 @@
     <div class="player-disc" id="playerDisc">🎵</div>
     <div class="player-info">
       <div id="trackName" class="track-name">No track loaded</div>
-      <div id="trackNum" class="muted small">0 / 0</div>
+      <div id="trackNum" class="track-num muted small">0 / 0</div>
     </div>
-    <audio id="mainPlayer" class="audio" controls></audio>
+    <audio id="mainPlayer" class="audio" controls style="width:100%;margin-top:8px"></audio>
     <div class="player-controls">
-      <button class="btn ghost" id="btnPrev">⏮</button>
+      <button class="btn ghost" id="btnPrev">⏮ Prev</button>
       <button class="btn" id="btnPlayPause">▶️ Play</button>
-      <button class="btn ghost" id="btnNext">⏭</button>
+      <button class="btn ghost" id="btnNext">Next ⏭</button>
     </div>
   </div>
-  <div class="card"><h3>📋 Playlist</h3><div id="playlistItems"></div></div>
+  <div class="card">
+    <h3>🎵 Playlist</h3>
+    <div id="playlistItems"><p class="muted">No tracks loaded.</p></div>
+  </div>
 </section>
 
 <!-- ══════════ HELP ══════════ -->
 <section class="view hidden" id="view-help">
-  <div class="card">
-    <h2>📱 Install PWA</h2>
-    <p><strong>Android:</strong> Chrome → menu ⋮ → Install app</p>
-    <p><strong>iPhone:</strong> Safari → Share ⬆️ → Add to Home Screen</p>
+  <div class="card hero">
+    <h2>❓ Help & Guide</h2>
+    <p class="muted">AapkiDhun ka poora tutorial</p>
   </div>
   <div class="card">
-    <h2>🛠️ Tools</h2>
-    <div class="tool-links wrap">
-      <a href="https://basicpitch.spotify.com" target="_blank" class="tool-btn">🎹 MP3→MIDI</a>
-      <a href="https://signal.vercel.app" target="_blank" class="tool-btn">🎼 MIDI Editor</a>
-      <a href="https://vocalremover.org" target="_blank" class="tool-btn">🎙️ Vocal Remove</a>
-      <a href="https://www.lalal.ai" target="_blank" class="tool-btn">🎸 Stem Split</a>
-      <a href="https://moises.ai" target="_blank" class="tool-btn">🎵 Moises</a>
-      <a href="https://suno.com" target="_blank" class="tool-btn">🎶 Suno</a>
-      <a href="https://udio.com" target="_blank" class="tool-btn">🎵 Udio</a>
+    <h3>🎵 Prompt Builder</h3>
+    <p class="muted small">Genre, Language, Vocal, Instruments choose karo → Generate karo → Suno/Udio me paste karo. Limit: 900 chars max. No external links output me.</p>
+  </div>
+  <div class="card">
+    <h3>🔬 Analyze / 🎼 Transcribe</h3>
+    <p class="muted small">MP3/WAV/MP4 phone se upload karo (📂 Choose File button dabao) ya YouTube/SoundCloud link dalo → Music Sheet milega: MIDI notes, Chords, Beat map, Vocal notes, ABC notation.</p>
+  </div>
+  <div class="card">
+    <h3>✍️ Lyrics Studio</h3>
+    <p class="muted small">3 tabs: 🆕 New = fresh lyrics banao | 📝 Original = apni lyrics analyze karo | 🔗 Reference = kisi song ke style me nayi lyrics banao. 14+ languages, 22+ vocal types, Auto Provider option.</p>
+  </div>
+  <div class="card">
+    <h3>🌿 Nature Sounds</h3>
+    <p class="muted small">Rain, Thunder, Birds, Wind, Forest, Animals — chips tap karo select karne ke liye, intensity aur layer choose karo, Generate Prompt karo.</p>
+  </div>
+  <div class="card">
+    <h3>🎧 Offline Player</h3>
+    <p class="muted small">📂 Load Music dabao → phone ki MP3/WAV files select karo → Prev/Play/Next se chalao. Bina internet ke bhi kaam karega.</p>
+  </div>
+  <div class="card">
+    <h3>📶 PWA Install</h3>
+    <p class="muted small">Browser me "Add to Home Screen" option se install karo. Ek baar install hone ke baad app bina internet ke bhi poori tarah kaam karega (offline mode).</p>
+  </div>
+  <div class="card">
+    <h3>🎯 Suno Best Practices</h3>
+    <ul style="padding-left:18px;color:var(--muted);font-size:13px;line-height:2.2">
+      <li>Prompt ≤ 900 characters rakho</li>
+      <li>Genre + BPM + Key pehle likho</li>
+      <li>Vocal type clearly specify karo</li>
+      <li>No external links ya URLs</li>
+      <li>Nature sounds ke liye intensity mention karo</li>
+      <li>"Reinforcement" line last me zaroor daalo</li>
+      <li>Style Pack me regional naam likho (e.g., Rajasthani-Marwadi)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🔗 Useful Tools</h3>
+    <div class="tool-links" style="flex-direction:column;gap:8px">
+      <a href="https://suno.com" target="_blank" class="tool-btn">🎵 Suno — AI Music Generator</a>
+      <a href="https://udio.com" target="_blank" class="tool-btn">🎶 Udio — AI Music Studio</a>
+      <a href="https://basicpitch.spotify.com" target="_blank" class="tool-btn">🎹 Basic Pitch — MP3 to MIDI</a>
+      <a href="https://signal.vercel.app" target="_blank" class="tool-btn">🎼 Signal — MIDI Editor (Free)</a>
+      <a href="https://chat.openai.com" target="_blank" class="tool-btn">🤖 ChatGPT — Lyrics Refinement</a>
     </div>
   </div>
 </section>
 
 </main>
-<footer class="footer"><span class="muted small">AapkiDhun v4 • World Music Prompt Studio</span></footer>
+
+<footer class="footer">
+  <span class="muted small">AapkiDhun PWA v4.0 • World Music Prompt Studio • Offline Ready 🎶</span>
+</footer>
+
 <script src="app.js"></script>
-<script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW:', e));
+    });
+  }
+</script>
 </body>
 </html>
