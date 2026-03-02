@@ -3,355 +3,758 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>AapkiDhun</title>
+  <title>AapkiDhun — Music Prompt Studio</title>
   <meta name="theme-color" content="#ff6b00"/>
   <link rel="manifest" href="manifest.json"/>
   <link rel="icon" href="icon.svg" type="image/svg+xml"/>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">AD</div>
-      <div>
-        <div class="title">AapkiDhun</div>
-        <div class="subtitle">Universal Meta Music Prompt Studio</div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">AD</div>
+    <div>
+      <div class="title">AapkiDhun</div>
+      <div class="subtitle">Universal Music Prompt Studio</div>
+    </div>
+  </div>
+  <button id="btnInstall" class="btn ghost small">Install</button>
+</header>
+
+<nav class="nav">
+  <button class="tab active" data-view="home">🏠</button>
+  <button class="tab" data-view="prompt">🎵 Prompt</button>
+  <button class="tab" data-view="presets">📂</button>
+  <button class="tab" data-view="recorder">🎤</button>
+  <button class="tab" data-view="transcribe">🎼</button>
+  <button class="tab" data-view="analyze">🔬 Analyze</button>
+  <button class="tab" data-view="lyrics">✍️ Lyrics</button>
+  <button class="tab" data-view="nature">🌿</button>
+  <button class="tab" data-view="player">🎧</button>
+  <button class="tab" data-view="help">❓</button>
+</nav>
+
+<main class="container">
+
+<!-- ══════════ HOME ══════════ -->
+<section class="view" id="view-home">
+  <div class="card hero">
+    <h1>🎶 AapkiDhun</h1>
+    <p class="muted">World Music Prompt Studio — Offline + Online</p>
+    <div class="grid2">
+      <button class="btn" data-goto="analyze">🔬 Analyze + Lyrics</button>
+      <button class="btn" data-goto="prompt">🎵 Create Prompt</button>
+      <button class="btn" data-goto="lyrics">✍️ Lyrics Studio</button>
+      <button class="btn" data-goto="nature">🌿 Nature Sounds</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>⭐ Features</h2>
+    <div class="feat-grid">
+      <div class="feat-item" data-goto="analyze">
+        <div class="fi-icon">📁</div>
+        <div class="fi-title">MP3/Video/URL</div>
+        <div class="fi-desc">File ya link dono</div>
+      </div>
+      <div class="feat-item" data-goto="analyze">
+        <div class="fi-icon">🥁</div>
+        <div class="fi-title">Beat Sync</div>
+        <div class="fi-desc">Exact BPM + groove</div>
+      </div>
+      <div class="feat-item" data-goto="analyze">
+        <div class="fi-icon">🎙️</div>
+        <div class="fi-title">Vocal Alag</div>
+        <div class="fi-desc">Singer ka prompt</div>
+      </div>
+      <div class="feat-item" data-goto="lyrics">
+        <div class="fi-icon">✍️</div>
+        <div class="fi-title">Lyrics Studio</div>
+        <div class="fi-desc">Nai + Reference</div>
+      </div>
+      <div class="feat-item" data-goto="player">
+        <div class="fi-icon">🎧</div>
+        <div class="fi-title">Music Player</div>
+        <div class="fi-desc">Offline bhi chalega</div>
+      </div>
+      <div class="feat-item" data-goto="help">
+        <div class="fi-icon">📶</div>
+        <div class="fi-title">Offline PWA</div>
+        <div class="fi-desc">Bina internet ke</div>
       </div>
     </div>
-    <button id="btnInstall" class="btn ghost" style="display:none">Install</button>
-  </header>
+  </div>
+</section>
 
-  <nav class="nav">
-    <button class="tab active" data-view="home">🏠</button>
-    <button class="tab" data-view="prompt">🎵 Prompt</button>
-    <button class="tab" data-view="presets">🎛️ Presets</button>
-    <button class="tab" data-view="recorder">🎤 Rec</button>
-    <button class="tab" data-view="transcribe">🎼 Transcribe</button>
-    <button class="tab" data-view="analyze">🔬 Analyze</button>
-    <button class="tab" data-view="lyrics">✍️ Lyrics</button>
-    <button class="tab" data-view="player">🎵 Player</button>
-    <button class="tab" data-view="help">❓</button>
-  </nav>
+<!-- ══════════ PROMPT ══════════ -->
+<section class="view hidden" id="view-prompt">
+  <div class="card">
+    <h2>🎵 Prompt Builder <span class="badge">Suno ≤900</span></h2>
+    <form id="promptForm" class="form">
+      <div class="row"><label>MODE</label>
+        <select name="mode">
+          <option>Regional Folk</option><option>Holi Dhamal</option><option>Bhajan</option>
+          <option>Qawwali</option><option>Ghazal</option><option>Hindustani Classical</option>
+          <option>Carnatic Classical</option><option>Bollywood</option><option>Sufi</option>
+          <option>Jazz</option><option>Blues</option><option>Rock</option><option>Metal</option>
+          <option>EDM / Electronic</option><option>Hip-Hop / Rap</option><option>R&B / Soul</option>
+          <option>Pop</option><option>Reggae</option><option>Afrobeat</option>
+          <option>Latin / Salsa</option><option>Flamenco</option><option>Country</option>
+          <option>Gospel</option><option>Ambient / Meditation</option>
+          <option>Cinematic / Orchestral</option><option>Instrumental</option><option>World Fusion</option>
+        </select>
+      </div>
+      <div class="row"><label>LANGUAGE</label>
+        <select name="language">
+          <optgroup label="🇮🇳 Indian">
+            <option>Hindi</option><option>Marwadi / Rajasthani</option><option>Punjabi</option>
+            <option>Bengali</option><option>Gujarati</option><option>Maithili</option>
+            <option>Bhojpuri</option><option>Awadhi</option><option>Haryanvi</option>
+            <option>Tamil</option><option>Telugu</option><option>Kannada</option>
+            <option>Malayalam</option><option>Odia</option>
+          </optgroup>
+          <optgroup label="🕉️ Spiritual">
+            <option>Sanskrit (Pure)</option><option>Sanskrit + Hindi Mix</option>
+            <option>Braj Bhasha</option><option>Urdu</option>
+            <option>Arabic</option><option>Persian / Farsi</option>
+          </optgroup>
+          <optgroup label="🌍 Global">
+            <option>Hinglish</option><option>English</option><option>Spanish</option>
+            <option>Portuguese</option><option>French</option><option>Swahili</option>
+          </optgroup>
+          <option>None (Instrumental)</option>
+        </select>
+      </div>
+      <div class="row"><label>THEME</label>
+        <input name="theme" placeholder="e.g., Fagun Holi masti, Spiritual love, Urban night" required/>
+      </div>
+      <div class="row"><label>STYLE PACK</label>
+        <input name="stylePack" placeholder="e.g., Rajasthani-Marwadi, Pakistani Sufi Rock"/>
+      </div>
+      <div class="row"><label>TEMPO</label>
+        <input name="tempo" placeholder="e.g., 118 BPM fast, 76 BPM slow"/>
+      </div>
+      <div class="row"><label>RHYTHM</label>
+        <input name="rhythm" placeholder="e.g., Dhamal 4/4, Teen taal, 6/8 waltz"/>
+      </div>
+      <div class="row"><label>INSTRUMENTS</label>
+        <input name="instruments" placeholder="e.g., Chang, Dholak, Khartal, Harmonium"/>
+      </div>
+      <div class="row"><label>VOCAL TYPE</label>
+        <select name="vocal">
+          <optgroup label="Male">
+            <option>Solo Male — Baritone (Deep)</option>
+            <option>Solo Male — Tenor (Medium High)</option>
+            <option>Male Classical — Dhrupad/Khayal</option>
+            <option>Male Sufi — Chest voice + Alaap</option>
+            <option>Male Qawwali — Group lead</option>
+            <option>Male Bhajan — Devotional</option>
+            <option>Male Rapper — Hip-Hop MC</option>
+            <option>Male R&B — Smooth soul</option>
+            <option>Male Rock — Gritty distorted</option>
+            <option>Male Jazz — Scat improv</option>
+            <option>Male Gospel — Powerful choir</option>
+            <option>Male Folk — Regional authentic</option>
+          </optgroup>
+          <optgroup label="Female">
+            <option>Solo Female — Soprano (High)</option>
+            <option>Solo Female — Mezzo (Medium)</option>
+            <option>Solo Female — Alto (Deep warm)</option>
+            <option>Female Classical — Khayal/Thumri</option>
+            <option>Female Carnatic — South Indian</option>
+            <option>Female Folk — Regional</option>
+            <option>Female Pop — Modern clear</option>
+            <option>Female R&B — Soulful</option>
+            <option>Female Ghazal — Urdu lyrical</option>
+            <option>Female Sufi — Mystical</option>
+          </optgroup>
+          <optgroup label="Duet & Group">
+            <option>Male + Female Duet</option>
+            <option>Qawwali Group Ensemble</option>
+            <option>Choir / Full Chorus</option>
+            <option>Call & Response Group</option>
+            <option>Tribal / Folk Group Chant</option>
+          </optgroup>
+          <optgroup label="Special">
+            <option>Karaoke — No Vocals (Instrumental)</option>
+            <option>Acoustic Solo — Unplugged</option>
+            <option>High Pitch Falsetto — Ethereal</option>
+            <option>Deep Bass Voice — Dark</option>
+            <option>Child Voice — Innocent</option>
+            <option>Sanskrit Chanting — Mantra</option>
+            <option>Vintage / Old style — 50s-60s</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="row"><label>DURATION</label>
+        <select name="duration">
+          <option>Unlimited</option><option>Under 1 min</option>
+          <option>1–2 min</option><option>2–3 min</option><option>3–5 min</option>
+        </select>
+      </div>
+      <div class="row"><label>LYRICS RULE</label>
+        <input name="lyricsRule" value="Clear pronunciation, short hook, call-response"/>
+      </div>
+      <div class="row"><label>SPECIAL NOTES</label>
+        <input name="special" placeholder="e.g., No EDM drops, raw analog feel, stadium energy"/>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">⚡ Generate Prompt</button>
+        <button class="btn ghost" type="button" id="btnSavePreset">💾 Save</button>
+      </div>
+    </form>
+  </div>
+  <div class="card hidden" id="promptOutCard">
+    <h2>📋 Prompt <span class="muted small" id="charCount"></span></h2>
+    <textarea id="promptOut" class="out" rows="12" readonly></textarea>
+    <div class="actions">
+      <button class="btn" id="btnCopy">📋 Copy</button>
+      <button class="btn ghost" id="btnPrint">🖨️ PDF</button>
+      <button class="btn ghost" id="btnClear">🗑️ Clear</button>
+    </div>
+    <div class="tool-links">
+      <a href="https://suno.com" target="_blank" class="tool-btn">🎵 Suno</a>
+      <a href="https://udio.com" target="_blank" class="tool-btn">🎶 Udio</a>
+      <a href="https://chat.openai.com" target="_blank" class="tool-btn">🤖 ChatGPT</a>
+    </div>
+  </div>
+</section>
 
-  <main class="container">
+<!-- ══════════ PRESETS ══════════ -->
+<section class="view hidden" id="view-presets">
+  <div class="card"><h2>📂 Built-in Presets</h2><div id="builtInList"></div></div>
+  <div class="card"><h2>💾 My Presets</h2><div id="myPresetList"><p class="muted">No saved presets.</p></div></div>
+</section>
 
-    <!-- HOME -->
-    <section class="view" id="view-home">
-      <div class="card hero">
-        <h1>🎵 AapkiDhun</h1>
-        <p class="muted">MP3 / Video / YouTube — Vocal + Music + Beat alag alag prompt pao!</p>
-        <div class="grid2">
-          <button class="btn" data-goto="analyze">🔬 Analyze Music</button>
-          <button class="btn" data-goto="transcribe">🎼 Transcribe</button>
-          <button class="btn" data-goto="lyrics">✍️ Lyrics Studio</button>
-          <button class="btn" data-goto="player">🎵 Music Player</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>🌟 Features</h2>
-        <div class="grid2">
-          <div class="mini">🎵 <b>MP3/Video/URL</b><br/><span class="muted small">File ya link dono</span></div>
-          <div class="mini">🥁 <b>Beat Sync</b><br/><span class="muted small">Exact BPM + groove</span></div>
-          <div class="mini">🎤 <b>Vocal Alag</b><br/><span class="muted small">Singer ka prompt</span></div>
-          <div class="mini">✍️ <b>Lyrics Studio</b><br/><span class="muted small">Nai + Reference</span></div>
-          <div class="mini">🎵 <b>Music Player</b><br/><span class="muted small">Offline bhi chalega</span></div>
-          <div class="mini">📶 <b>Offline PWA</b><br/><span class="muted small">Bina internet ke</span></div>
-        </div>
-      </div>
-    </section>
+<!-- ══════════ RECORDER ══════════ -->
+<section class="view hidden" id="view-recorder">
+  <div class="card">
+    <h2>🎤 Voice Recorder</h2>
+    <div class="rec">
+      <button class="btn" id="btnRec">🔴 Start</button>
+      <button class="btn ghost" id="btnStop" disabled>⏹ Stop</button>
+      <button class="btn ghost" id="btnDownload" disabled>⬇️ Download</button>
+    </div>
+    <audio id="recAudio" class="audio" controls></audio>
+  </div>
+</section>
 
-    <!-- PROMPT -->
-    <section class="view hidden" id="view-prompt">
-      <div class="card">
-        <h2>🎵 Create Music Prompt</h2>
-        <form id="promptForm" class="form">
-          <div class="row"><label>MODE</label><select name="mode"><option>Regional Folk</option><option>Holi Dhamal</option><option>Bhajan</option><option>Song</option><option>Instrumental</option></select></div>
-          <div class="row"><label>LANGUAGE</label><select name="language"><option>Marwadi</option><option>Hindi</option><option>English</option><option>Punjabi</option></select></div>
-          <div class="row"><label>THEME</label><input name="theme" placeholder="e.g., Fagun Holi masti" required/></div>
-          <div class="row"><label>STYLE PACK</label><input name="stylePack" placeholder="e.g., Rajasthani-Marwadi"/></div>
-          <div class="row"><label>TEMPO</label><input name="tempo" placeholder="e.g., 118 BPM"/></div>
-          <div class="row"><label>RHYTHM</label><input name="rhythm" placeholder="e.g., Dhamal 4/4 swing"/></div>
-          <div class="row"><label>INSTRUMENTS</label><input name="instruments" placeholder="Chang, Khartal, Dholak..."/></div>
-          <div class="row"><label>VOCAL</label><select name="vocal"><option>None</option><option>AI Female Folk + Chorus</option><option>AI Male Folk</option><option>My Recorded Voice</option></select></div>
-          <div class="row"><label>DURATION</label><input name="duration" value="Unlimited"/></div>
-          <div class="row"><label>PREVIEW FIRST</label><select name="previewFirst"><option>YES (3 previews, 20 sec)</option><option>NO</option></select></div>
-          <div class="row"><label>LYRICS RULE</label><input name="lyricsRule" value="Clear pronunciation, short hook"/></div>
-          <div class="row"><label>REFERENCE</label><input name="reference" placeholder="YouTube/audio link"/></div>
-          <div class="actions">
-            <button class="btn" type="submit">⚡ Generate</button>
-            <button class="btn ghost" type="button" id="btnSavePreset">💾 Save</button>
-          </div>
-        </form>
-      </div>
-      <div class="card">
-        <h2>📋 Generated Prompt</h2>
-        <textarea id="promptOut" class="out" rows="14" readonly></textarea>
-        <div class="actions">
-          <button class="btn" id="btnCopy">📋 Copy</button>
-          <button class="btn ghost" id="btnClear">🗑️ Clear</button>
-        </div>
-      </div>
-    </section>
+<!-- ══════════ TRANSCRIBE ══════════ -->
+<section class="view hidden" id="view-transcribe">
+  <div class="card">
+    <h2>🎼 Music Transcriber</h2>
+    <p class="muted">Phone/Computer file ya online link — dono kaam karenge</p>
 
-    <!-- PRESETS -->
-    <section class="view hidden" id="view-presets">
-      <div class="card"><h2>🎛️ Built-in Presets</h2><div id="presetList" class="presetList"></div></div>
-      <div class="card"><h2>💾 My Saved Presets</h2><div id="myPresetList" class="presetList"></div></div>
-    </section>
+    <!-- SOURCE TABS -->
+    <div class="upload-tabs">
+      <button class="utab active" id="ttabFile">📁 File Upload</button>
+      <button class="utab" id="ttabLink">🔗 Online Link</button>
+    </div>
 
-    <!-- RECORDER -->
-    <section class="view hidden" id="view-recorder">
-      <div class="card">
-        <h2>🎤 Voice Recorder</h2>
-        <p class="muted">Recording se pehle 2 claps bolein (sync marker).</p>
-        <div class="rec">
-          <button class="btn" id="btnRec">⏺️ Start</button>
-          <button class="btn ghost" id="btnStop" disabled>⏹️ Stop</button>
-          <a class="btn ghost" id="btnDownload" download="aapkidhun_voice.webm" style="pointer-events:none;opacity:.5;">⬇️ Download</a>
-        </div>
-        <audio id="playback" controls class="audio"></audio>
+    <!-- FILE UPLOAD — iOS FIXED -->
+    <div id="tFileArea">
+      <div class="upload-box" id="tUploadBox">
+        <div class="upload-icon">🎵</div>
+        <p>MP3, WAV, M4A, MP4 — Phone/Computer se</p>
+        <!-- FIX: label directly linked — iOS Safari compatible -->
+        <input type="file" id="tAudioFile" accept="audio/*,video/*"/>
+        <label for="tAudioFile" class="btn" style="display:inline-block;margin-top:8px">📂 Choose File</label>
       </div>
-    </section>
+      <div id="tFileInfo" class="hidden"></div>
+    </div>
 
-    <!-- TRANSCRIBE -->
-    <section class="view hidden" id="view-transcribe">
-      <div class="card">
-        <h2>🎼 World Music Transcriber</h2>
-        <p class="muted">YouTube / SoundCloud / MP3 link dalo — full analysis prompt milega</p>
-        <form id="tForm" class="form">
-          <div class="row"><label>🔗 URL</label><input name="url" placeholder="YouTube / SoundCloud / MP3 link" required/></div>
-          <div class="row"><label>🎵 Genre</label><select name="gp" id="tGenre"></select></div>
-          <div class="row"><label>🎸 Instruments</label><input name="inst" id="tInst" placeholder="Auto-fill"/></div>
-          <div class="row"><label>🎹 Key</label><input name="key" placeholder="Auto-detect"/></div>
-          <div class="row"><label>🥁 Tempo</label><input name="tempo" placeholder="Auto-detect BPM"/></div>
-          <div class="actions"><button class="btn" type="submit">⚡ Generate Prompt</button></div>
-        </form>
+    <!-- LINK INPUT -->
+    <div id="tLinkArea" class="hidden">
+      <div class="row" style="margin-top:10px">
+        <label>MUSIC URL</label>
+        <input id="tUrl" placeholder="YouTube, SoundCloud, MP3 link..."/>
       </div>
-      <div class="card" id="tOut" style="display:none">
-        <h2>📋 Transcription Prompt</h2>
-        <textarea id="tText" class="out" rows="20" readonly></textarea>
-        <div class="actions">
-          <button class="btn" id="tCopy">📋 Copy</button>
-          <button class="btn ghost" id="tPDF">🖨️ PDF</button>
-        </div>
-        <p class="muted small">👆 ChatGPT / Gemini / Claude me paste karo!</p>
-      </div>
-    </section>
+    </div>
 
-    <!-- ANALYZE -->
-    <section class="view hidden" id="view-analyze">
-      <div class="card">
-        <h2>🔬 Music Analyzer</h2>
-        <p class="muted">MP3/Video upload karo <b>ya</b> YouTube/online link dalo!</p>
-        <div class="analyze-tabs">
-          <button class="atab active" data-atab="file">📁 File Upload</button>
-          <button class="atab" data-atab="link">🔗 Online Link</button>
-        </div>
-        <div id="atab-file">
-          <div class="upload-box" id="uploadBox">
-            <div class="upload-icon">🎵</div>
-            <p>MP3 / MP4 / WAV tap karo</p>
-            <input type="file" id="fileInput" accept="audio/*,video/*" style="display:none"/>
-            <button class="btn" id="btnUpload">📁 File Select</button>
-          </div>
-          <div id="fileInfo" style="display:none" class="file-info">
-            <span id="fileName">—</span>
-            <span id="fileSize" class="muted small"></span>
-          </div>
-        </div>
-        <div id="atab-link" style="display:none">
-          <div class="form" style="margin-top:12px">
-            <div class="row"><label>🔗 Link</label>
-              <input id="onlineLink" placeholder="YouTube / SoundCloud / MP3 URL..."/>
-            </div>
-            <p class="muted small">✅ YouTube ✅ SoundCloud ✅ Direct MP3/WAV links</p>
-          </div>
-        </div>
-        <form id="analyzeForm" class="form" style="margin-top:12px">
-          <div class="row"><label>🎵 Genre</label>
-            <select name="aGenre">
-              <option value="folk">🪘 Folk/Regional</option>
-              <option value="bollywood">🎬 Bollywood</option>
-              <option value="qawwali">🕌 Qawwali/Sufi</option>
-              <option value="classical">🎻 Classical</option>
-              <option value="jazz">🎷 Jazz/Blues</option>
-              <option value="edm">🎧 EDM</option>
-              <option value="hiphop">🎤 Hip-Hop</option>
-              <option value="world">🌍 World Music</option>
-            </select>
-          </div>
-          <div class="row"><label>🎹 Key</label><input name="aKey" placeholder="Auto-detect"/></div>
-          <div class="row"><label>🥁 BPM</label><input name="aBpm" placeholder="Auto-detect"/></div>
-          <div class="row"><label>🎤 Vocal</label>
-            <select name="aVocal">
-              <option>Male Solo</option><option>Female Solo</option>
-              <option>Male + Chorus</option><option>Female + Chorus</option>
-              <option>No Vocal</option>
-            </select>
-          </div>
-          <div class="actions">
-            <button class="btn" type="submit">🔬 Generate All Prompts</button>
-          </div>
-        </form>
+    <div class="form" style="margin-top:12px">
+      <div class="row"><label>GENRE</label>
+        <select id="transcribeGenre"><option value="">-- Auto Detect --</option></select>
       </div>
-      <div id="analyzeOut" style="display:none">
-        <div class="card"><h2>🥁 Beat + Rhythm Prompt</h2><textarea id="beatPrompt" class="out" rows="16" readonly></textarea><div class="actions"><button class="btn" onclick="copyText('beatPrompt')">📋 Copy</button><button class="btn ghost" onclick="printText('beatPrompt','Beat Prompt')">🖨️ PDF</button></div></div>
-        <div class="card"><h2>🎸 Instruments Prompt</h2><textarea id="instrPrompt" class="out" rows="16" readonly></textarea><div class="actions"><button class="btn" onclick="copyText('instrPrompt')">📋 Copy</button><button class="btn ghost" onclick="printText('instrPrompt','Instruments Prompt')">🖨️ PDF</button></div></div>
-        <div class="card"><h2>🎤 Vocal Prompt</h2><textarea id="vocalPrompt" class="out" rows="16" readonly></textarea><div class="actions"><button class="btn" onclick="copyText('vocalPrompt')">📋 Copy</button><button class="btn ghost" onclick="printText('vocalPrompt','Vocal Prompt')">🖨️ PDF</button></div></div>
-        <div class="card"><h2>🎵 Full Composition Prompt</h2><textarea id="fullPrompt" class="out" rows="20" readonly></textarea><div class="actions"><button class="btn" onclick="copyText('fullPrompt')">📋 Copy</button><button class="btn ghost" onclick="printText('fullPrompt','Full Prompt')">🖨️ PDF</button></div></div>
-        <div class="card">
-          <h2>🔧 Next Step Tools</h2>
-          <div class="grid2">
-            <a class="btn" href="https://basicpitch.spotify.com" target="_blank">🎹 MP3→MIDI</a>
-            <a class="btn" href="https://signal.vercel.app" target="_blank">🎼 MIDI Editor</a>
-            <a class="btn" href="https://vocalremover.org" target="_blank">🎤 Vocal Remove</a>
-            <a class="btn" href="https://www.lalal.ai" target="_blank">🎸 Stem Split</a>
-            <a class="btn" href="https://moises.ai" target="_blank">🎵 Moises.ai</a>
-            <a class="btn" href="https://suno.com" target="_blank">🤖 Suno AI</a>
-          </div>
-        </div>
+      <div class="row"><label>INSTRUMENTS</label>
+        <input id="transcribeInst" placeholder="Auto-filled or enter manually"/>
       </div>
-    </section>
+      <div class="row"><label>KEY</label>
+        <input id="transcribeKey" placeholder="e.g., G Major, D Minor"/>
+      </div>
+      <div class="row"><label>TEMPO</label>
+        <input id="transcribeTempo" placeholder="e.g., 118 BPM"/>
+      </div>
+    </div>
+    <div class="actions"><button class="btn" id="btnTranscribe">🎼 Generate Music Sheet</button></div>
+  </div>
 
-    <!-- LYRICS -->
-    <section class="view hidden" id="view-lyrics">
-      <div class="card">
-        <h2>✍️ Lyrics Studio</h2>
-        <p class="muted">Nai lyrics banao ya reference se nayi composition karo!</p>
-        <div class="lyric-modes">
-          <button class="lmode active" data-lmode="new">🆕 New Lyrics</button>
-          <button class="lmode" data-lmode="original">📜 My Lyrics</button>
-          <button class="lmode" data-lmode="reference">🎵 Reference</button>
-        </div>
-      </div>
-      <div class="card lview" id="lview-new">
-        <h2>🆕 Nai Lyrics Banao</h2>
-        <form id="newLyricsForm" class="form">
-          <div class="row"><label>🎵 Genre</label><select name="lg"><option>Rajasthani Folk</option><option>Holi Dhamal</option><option>Bhajan/Devotional</option><option>Bollywood</option><option>Sufi/Qawwali</option><option>Hip-Hop</option><option>Pop</option><option>Classical</option></select></div>
-          <div class="row"><label>🗣️ Language</label><select name="ll"><option>Marwadi</option><option>Hindi</option><option>English</option><option>Hinglish</option><option>Punjabi</option></select></div>
-          <div class="row"><label>💭 Theme</label><input name="ltheme" placeholder="e.g., Holi ki masti..." required/></div>
-          <div class="row"><label>😊 Mood</label><select name="lmood"><option>Khushi/Festive</option><option>Romantic</option><option>Devotional</option><option>Sad/Emotional</option><option>Energetic</option><option>Peaceful</option></select></div>
-          <div class="row"><label>🏗️ Structure</label><select name="lstruct"><option>Mukhda + 2 Antara</option><option>Verse + Chorus + Bridge</option><option>Mukhda Only</option><option>Full Song (4 parts)</option></select></div>
-          <div class="row"><label>🎤 Vocal</label><select name="lvocal"><option>Solo Male</option><option>Solo Female</option><option>Duet</option><option>Chorus</option></select></div>
-          <div class="row"><label>✨ Special</label><input name="lspecial" placeholder="e.g., playful tone, short lines"/></div>
-          <div class="actions"><button class="btn" type="submit">⚡ Generate Prompt</button></div>
-        </form>
-        <div id="newLyricsOut" style="display:none">
-          <textarea id="newLyricsText" class="out" rows="18" readonly></textarea>
-          <div class="actions"><button class="btn" onclick="copyText('newLyricsText')">📋 Copy</button><button class="btn ghost" onclick="printText('newLyricsText','New Lyrics')">🖨️ PDF</button></div>
-          <p class="muted small">👆 ChatGPT/Gemini me paste karo!</p>
-        </div>
-      </div>
-      <div class="card lview hidden" id="lview-original">
-        <h2>📜 Meri Original Lyrics</h2>
-        <form id="origLyricsForm" class="form">
-          <div class="row"><label>🎵 Title</label><input name="otitle" placeholder="Song ka naam" required/></div>
-          <div class="row"><label>📝 Lyrics</label></div>
-          <textarea name="olyrics" class="out" rows="10" placeholder="Yahan apni lyrics likho...&#10;&#10;Mukhda:&#10;...&#10;&#10;Antara 1:&#10;..."></textarea>
-          <div class="row"><label>🎵 Genre</label><select name="og"><option>Rajasthani Folk</option><option>Bhajan</option><option>Bollywood</option><option>Sufi</option><option>Pop</option></select></div>
-          <div class="row"><label>🥁 BPM</label><input name="obpm" placeholder="e.g., 118 BPM"/></div>
-          <div class="actions"><button class="btn" type="submit">⚡ Generate Prompt</button></div>
-        </form>
-        <div id="origLyricsOut" style="display:none">
-          <textarea id="origLyricsText" class="out" rows="18" readonly></textarea>
-          <div class="actions"><button class="btn" onclick="copyText('origLyricsText')">📋 Copy</button><button class="btn ghost" onclick="printText('origLyricsText','Original Lyrics')">🖨️ PDF</button></div>
-        </div>
-      </div>
-      <div class="card lview hidden" id="lview-reference">
-        <h2>🎵 Reference Se Nai Lyrics</h2>
-        <form id="refLyricsForm" class="form">
-          <div class="row"><label>🔗 Ref URL</label><input name="rurl" placeholder="YouTube / audio link"/></div>
-          <div class="row"><label>📝 Ref Lyrics</label></div>
-          <textarea name="rlyrics" class="out" rows="6" placeholder="Reference lyrics (optional)..."></textarea>
-          <div class="row"><label>💭 Naya Theme</label><input name="rtheme" placeholder="e.g., Meri nai kahani..." required/></div>
-          <div class="row"><label>🗣️ Language</label><select name="rlang"><option>Marwadi</option><option>Hindi</option><option>English</option><option>Hinglish</option><option>Punjabi</option></select></div>
-          <div class="row"><label>😊 Mood</label><select name="rmood"><option>Khushi/Festive</option><option>Romantic</option><option>Devotional</option><option>Sad/Emotional</option><option>Energetic</option></select></div>
-          <div class="row"><label>🏗️ Structure</label><select name="rstruct"><option>Same as reference</option><option>Mukhda + 2 Antara</option><option>Verse + Chorus + Bridge</option><option>Full Song</option></select></div>
-          <div class="row"><label>✨ Style</label><input name="rstyle" placeholder="e.g., Same rhythm feel"/></div>
-          <div class="actions"><button class="btn" type="submit">⚡ Generate Prompt</button></div>
-        </form>
-        <div id="refLyricsOut" style="display:none">
-          <textarea id="refLyricsText" class="out" rows="18" readonly></textarea>
-          <div class="actions"><button class="btn" onclick="copyText('refLyricsText')">📋 Copy</button><button class="btn ghost" onclick="printText('refLyricsText','Reference Lyrics')">🖨️ PDF</button></div>
-          <p class="muted small">👆 ChatGPT/Gemini me paste karo!</p>
-        </div>
-      </div>
-    </section>
+  <div class="card hidden" id="transcribeOutCard">
+    <h2>📄 Music Sheet Output</h2>
+    <textarea id="transcribeOut" class="out sheet-out" rows="24" readonly></textarea>
+    <div class="actions">
+      <button class="btn" id="btnCopyT">📋 Copy</button>
+      <button class="btn ghost" id="btnPrintT">🖨️ PDF</button>
+    </div>
+    <div class="tool-links">
+      <a href="https://basicpitch.spotify.com" target="_blank" class="tool-btn">🎹 MP3→MIDI</a>
+      <a href="https://signal.vercel.app" target="_blank" class="tool-btn">🎼 MIDI Editor</a>
+      <a href="https://chat.openai.com" target="_blank" class="tool-btn">🤖 ChatGPT</a>
+    </div>
+  </div>
+</section>
 
-    <!-- PLAYER -->
-    <section class="view hidden" id="view-player">
-      <div class="card">
-        <h2>🎵 Music Player</h2>
-        <p class="muted">Phone se MP3/Audio select karo — offline bhi chalega!</p>
-        <div class="upload-box" id="playerUploadBox">
-          <div class="upload-icon">🎵</div>
-          <p>MP3 / WAV / M4A / OGG select karo</p>
-          <input type="file" id="playerFileInput" accept="audio/*" style="display:none"/>
-          <button class="btn" id="btnPlayerUpload">📁 Music Select</button>
-        </div>
-        <div id="playerInfo" style="display:none" class="file-info">
-          <span id="playerFileName">—</span>
-        </div>
-      </div>
-      <div class="card" id="playerCard" style="display:none">
-        <h2 id="playerTitle">🎵 Now Playing</h2>
-        <div class="player-art">
-          <div class="player-disc" id="playerDisc">🎵</div>
-        </div>
-        <audio id="mainPlayer" controls class="audio"></audio>
-        <div class="player-controls">
-          <button class="btn ghost" id="btnPrev">⏮️ Prev</button>
-          <button class="btn" id="btnPlayPause">▶️ Play</button>
-          <button class="btn ghost" id="btnNext">⏭️ Next</button>
-        </div>
-        <div class="form" style="margin-top:8px">
-          <div class="row"><label>⏱️ Time</label><span id="pDuration" class="muted">0:00 / 0:00</span></div>
-          <div class="row"><label>📁 File</label><span id="pFile" class="muted small">—</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <h2>📋 Playlist</h2>
-        <p class="muted small">Multiple files select karo!</p>
-        <input type="file" id="playlistInput" accept="audio/*" multiple style="display:none"/>
-        <button class="btn" id="btnPlaylist">➕ Add Songs</button>
-        <div id="playlistItems" style="margin-top:12px"></div>
-      </div>
-      <div class="card">
-        <h2>✅ Offline Ready</h2>
-        <div class="grid2">
-          <div class="mini">✅ <b>Offline Play</b><br/><span class="muted small">Internet nahi chahiye</span></div>
-          <div class="mini">📱 <b>All Formats</b><br/><span class="muted small">MP3 WAV M4A OGG</span></div>
-          <div class="mini">🎵 <b>Playlist</b><br/><span class="muted small">Multiple songs</span></div>
-          <div class="mini">💾 <b>PWA Installed</b><br/><span class="muted small">Home screen pe</span></div>
-        </div>
-      </div>
-    </section>
+<!-- ══════════ ANALYZE ══════════ -->
+<section class="view hidden" id="view-analyze">
+  <div class="card">
+    <h2>🔬 Music Analyzer</h2>
+    <p class="muted">MP3/Video upload karo ya online link — Music Sheet milega</p>
 
-    <!-- HELP -->
-    <section class="view hidden" id="view-help">
-      <div class="card">
-        <h2>📱 Install PWA</h2>
-        <div class="grid2">
-          <div class="mini"><h3>Android</h3><ol><li>Chrome me open</li><li>Menu ⋮ → Install app</li></ol></div>
-          <div class="mini"><h3>iPhone</h3><ol><li>Safari me open</li><li>Share → Add to Home Screen</li></ol></div>
-        </div>
-      </div>
-      <div class="card">
-        <h2>🔧 Useful Tools</h2>
-        <div class="grid2">
-          <a class="btn" href="https://basicpitch.spotify.com" target="_blank">🎹 MP3→MIDI</a>
-          <a class="btn" href="https://signal.vercel.app" target="_blank">🎼 MIDI Editor</a>
-          <a class="btn" href="https://vocalremover.org" target="_blank">🎤 Vocal Remove</a>
-          <a class="btn" href="https://suno.com" target="_blank">🤖 Suno AI</a>
-          <a class="btn" href="https://moises.ai" target="_blank">🎵 Moises.ai</a>
-          <a class="btn" href="https://www.lalal.ai" target="_blank">🎸 Stem Split</a>
-        </div>
-      </div>
-    </section>
+    <div class="upload-tabs">
+      <button class="utab active" id="utabFile">📁 File Upload</button>
+      <button class="utab" id="utabLink">🔗 Online Link</button>
+    </div>
 
-  </main>
-  <footer class="footer"><span class="muted small">AapkiDhun PWA • Music Prompt Studio 🎵</span></footer>
-  <script src="app.js"></script>
-  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
+    <!-- FILE UPLOAD — iOS FIXED with label -->
+    <div id="uploadFileArea">
+      <div class="upload-box" id="uploadBox">
+        <div class="upload-icon">📁</div>
+        <p>MP3, WAV, M4A, MP4 — Phone/Computer se</p>
+        <!-- KEY FIX: input visible + label for iOS -->
+        <input type="file" id="audioFile" accept="audio/*,video/*"/>
+        <label for="audioFile" class="btn" style="display:inline-block;margin-top:8px">📂 Choose File</label>
+      </div>
+      <div id="fileInfo" class="hidden"></div>
+    </div>
+
+    <div id="uploadLinkArea" class="hidden">
+      <div class="row" style="margin-top:10px">
+        <label>MUSIC URL</label>
+        <input id="analyzeUrl" placeholder="YouTube, SoundCloud, MP3 direct link..."/>
+      </div>
+    </div>
+
+    <div class="form" style="margin-top:12px">
+      <div class="row"><label>GENRE</label>
+        <select id="analyzeGenre">
+          <option value="auto">Auto Detect</option>
+          <option>Regional Folk</option><option>Hindustani Classical</option>
+          <option>Carnatic Classical</option><option>Bollywood</option>
+          <option>Qawwali / Sufi</option><option>Bhajan</option><option>Ghazal</option>
+          <option>Jazz</option><option>Blues</option><option>Rock</option>
+          <option>Hip-Hop</option><option>EDM</option><option>Reggae</option>
+          <option>Flamenco</option><option>African</option><option>Latin</option>
+          <option>World Fusion</option>
+        </select>
+      </div>
+      <div class="row"><label>KEY</label>
+        <input id="analyzeKey" placeholder="Auto detect or e.g., G Major"/>
+      </div>
+      <div class="row"><label>BPM</label>
+        <input id="analyzeBpm" placeholder="Auto detect or enter number"/>
+      </div>
+      <div class="row"><label>VOCAL</label>
+        <select id="analyzeVocal">
+          <option value="auto">Auto Detect</option>
+          <option>Solo Male — Baritone</option><option>Solo Male — Tenor</option>
+          <option>Solo Female — Soprano</option><option>Solo Female — Mezzo</option>
+          <option>Male + Female Duet</option><option>Qawwali Group</option>
+          <option>Choir / Chorus</option><option>No Vocals (Instrumental)</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnAnalyze">⚡ Generate Music Sheet</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT TABS -->
+  <div class="card hidden" id="analyzeOutCard">
+    <div class="result-tabs">
+      <button class="rtab active" data-rt="sheet">📄 Full Sheet</button>
+      <button class="rtab" data-rt="beat">🥁 Beat</button>
+      <button class="rtab" data-rt="instr">🎸 Instruments</button>
+      <button class="rtab" data-rt="vocal">🎤 Vocal</button>
+      <button class="rtab" data-rt="suno">🎵 Suno</button>
+      <button class="rtab" data-rt="new">✨ New</button>
+    </div>
+
+    <div id="rt-sheet" class="rt-panel">
+      <h3>📄 Full Music Sheet</h3>
+      <textarea id="sheetOut" class="out sheet-out" rows="26" readonly></textarea>
+      <div class="actions">
+        <button class="btn" onclick="copyText('sheetOut')">📋 Copy</button>
+        <button class="btn ghost" onclick="printText('sheetOut','Music Sheet')">🖨️ PDF</button>
+      </div>
+    </div>
+    <div id="rt-beat" class="rt-panel hidden">
+      <h3>🥁 Beat Sheet</h3>
+      <textarea id="beatOut" class="out sheet-out" rows="14" readonly></textarea>
+      <div class="actions"><button class="btn" onclick="copyText('beatOut')">📋 Copy</button></div>
+    </div>
+    <div id="rt-instr" class="rt-panel hidden">
+      <h3>🎸 Instrument Sheet</h3>
+      <textarea id="instrOut" class="out sheet-out" rows="14" readonly></textarea>
+      <div class="actions"><button class="btn" onclick="copyText('instrOut')">📋 Copy</button></div>
+    </div>
+    <div id="rt-vocal" class="rt-panel hidden">
+      <h3>🎤 Vocal Sheet</h3>
+      <textarea id="vocalOut" class="out sheet-out" rows="14" readonly></textarea>
+      <div class="actions"><button class="btn" onclick="copyText('vocalOut')">📋 Copy</button></div>
+    </div>
+    <div id="rt-suno" class="rt-panel hidden">
+      <h3>🎵 Suno/Udio Ready Prompt</h3>
+      <textarea id="fullOut" class="out" rows="10" readonly></textarea>
+      <div class="actions">
+        <button class="btn" onclick="copyText('fullOut')">📋 Copy</button>
+        <a href="https://suno.com" target="_blank" class="tool-btn">🎵 Suno</a>
+        <a href="https://udio.com" target="_blank" class="tool-btn">🎶 Udio</a>
+      </div>
+    </div>
+    <div id="rt-new" class="rt-panel hidden">
+      <h3>✨ New Composition</h3>
+      <div class="form">
+        <div class="row"><label>LANGUAGE</label>
+          <select id="newLang">
+            <option>Hindi</option><option>Marwadi</option><option>Punjabi</option>
+            <option>Bengali</option><option>Sanskrit</option><option>Urdu</option>
+            <option>Tamil</option><option>Telugu</option><option>Hinglish</option>
+            <option>English</option><option>Arabic</option><option>Spanish</option>
+          </select>
+        </div>
+        <div class="row"><label>VOCAL TYPE</label>
+          <select id="newVocal">
+            <option>Solo Male — Baritone</option><option>Solo Male — Tenor</option>
+            <option>Solo Female — Soprano</option><option>Female Classical</option>
+            <option>Male Sufi — Alaap</option><option>Male Rapper</option>
+            <option>Male + Female Duet</option><option>Qawwali Group</option>
+            <option>Karaoke — Instrumental</option><option>Sanskrit Chanting</option>
+          </select>
+        </div>
+        <div class="row"><label>NEW THEME</label>
+          <input id="newTheme" placeholder="Kya topic chahiye?"/>
+        </div>
+        <div class="row"><label>KEEP FROM REF</label>
+          <input id="keepFrom" placeholder="e.g., same BPM, same instruments"/>
+        </div>
+      </div>
+      <button class="btn" id="btnNewCompose" style="margin-top:10px">🎵 Generate</button>
+      <textarea id="newComposeOut" class="out" rows="10" readonly style="margin-top:10px"></textarea>
+      <div class="actions"><button class="btn" onclick="copyText('newComposeOut')">📋 Copy</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ LYRICS ══════════ -->
+<section class="view hidden" id="view-lyrics">
+  <div class="card">
+    <h2>✍️ Lyrics Studio</h2>
+    <div class="lyrics-tabs">
+      <button class="ltab active" data-lt="new">🆕 New</button>
+      <button class="ltab" data-lt="original">📝 Original</button>
+      <button class="ltab" data-lt="reference">🔗 Reference</button>
+    </div>
+  </div>
+  <div id="lt-new" class="lt-panel">
+    <div class="card">
+      <h3>🆕 New Lyrics</h3>
+      <form id="newLyricsForm" class="form">
+        <div class="row"><label>PROVIDER</label>
+          <select name="nlProvider">
+            <option value="auto">🤖 Auto (Best AI)</option>
+            <option value="chatgpt">ChatGPT</option>
+            <option value="gemini">Gemini</option>
+            <option value="claude">Claude</option>
+            <option value="suno">Suno</option>
+          </select>
+        </div>
+        <div class="row"><label>GENRE</label>
+          <select name="nlGenre">
+            <option>Rajasthani Folk</option><option>Bhajan</option><option>Qawwali</option>
+            <option>Ghazal</option><option>Sufi</option><option>Bollywood Romantic</option>
+            <option>Bollywood Sad</option><option>Holi/Festival</option><option>Wedding</option>
+            <option>Hip-Hop/Rap</option><option>Pop</option><option>Rock</option>
+            <option>Gospel</option><option>Spiritual/Mantra</option><option>World Fusion</option>
+          </select>
+        </div>
+        <div class="row"><label>LANGUAGE</label>
+          <select name="nlLang">
+            <option>Hindi</option><option>Marwadi</option><option>Punjabi</option>
+            <option>Bengali</option><option>Gujarati</option><option>Bhojpuri</option>
+            <option>Sanskrit</option><option>Braj Bhasha</option><option>Urdu</option>
+            <option>Hinglish</option><option>English</option><option>Arabic</option>
+            <option>Tamil</option><option>Telugu</option>
+          </select>
+        </div>
+        <div class="row"><label>VOCAL</label>
+          <select name="nlVocal">
+            <option>Solo Male — Baritone</option><option>Solo Male — Tenor</option>
+            <option>Solo Female — Soprano</option><option>Solo Female — Mezzo</option>
+            <option>Male Classical — Khayal</option><option>Female Classical — Thumri</option>
+            <option>Male Sufi — Alaap</option><option>Male Qawwali</option>
+            <option>Male Rapper</option><option>Male R&B</option><option>Male Rock</option>
+            <option>Female Pop</option><option>Female Ghazal</option><option>Female Folk</option>
+            <option>Male + Female Duet</option><option>Qawwali Group</option>
+            <option>Choir</option><option>Karaoke Instrumental</option>
+            <option>Falsetto High Pitch</option><option>Deep Bass</option>
+            <option>Child Voice</option><option>Sanskrit Chanting</option>
+          </select>
+        </div>
+        <div class="row"><label>THEME</label>
+          <input name="nlTheme" placeholder="e.g., Krishna bhakti, Monsoon love, Midnight city" required/>
+        </div>
+        <div class="row"><label>MOOD</label>
+          <select name="nlMood">
+            <option>Joyful / Festival</option><option>Devotional / Bhakti</option>
+            <option>Romantic / Love</option><option>Sad / Longing</option>
+            <option>Energetic / Powerful</option><option>Peaceful / Calm</option>
+            <option>Mystical / Sufi</option><option>Nostalgic</option><option>Epic</option>
+          </select>
+        </div>
+        <div class="row"><label>STRUCTURE</label>
+          <select name="nlStruct">
+            <option>Mukhda + 3 Antara</option><option>Verse + Chorus x3</option>
+            <option>Call & Response</option><option>Free Form / Ghazal</option>
+            <option>Rap: 16-bar x3 + Hook</option>
+          </select>
+        </div>
+        <div class="row"><label>BPM FEEL</label>
+          <input name="nlBpm" placeholder="e.g., 118 BPM fast, 76 BPM slow"/>
+        </div>
+        <div class="row"><label>SPECIAL</label>
+          <input name="nlSpecial" placeholder="e.g., Radha-Krishna references, Braj words"/>
+        </div>
+        <div class="actions"><button class="btn" type="submit">⚡ Generate</button></div>
+      </form>
+    </div>
+    <div class="card hidden" id="newLyricsOutCard">
+      <textarea id="newLyricsOut" class="out" rows="16" readonly></textarea>
+      <div class="actions">
+        <button class="btn" onclick="copyText('newLyricsOut')">📋 Copy</button>
+        <button class="btn ghost" onclick="printText('newLyricsOut','Lyrics')">🖨️ PDF</button>
+      </div>
+    </div>
+  </div>
+  <div id="lt-original" class="lt-panel hidden">
+    <div class="card">
+      <h3>📝 Original Lyrics Analysis</h3>
+      <form id="origLyricsForm" class="form">
+        <textarea name="olLyrics" class="out" rows="5" placeholder="Lyrics paste karo ya neeche URL do..."></textarea>
+        <div class="row" style="margin-top:8px"><label>GENRE</label>
+          <select name="olGenre"><option>Auto Detect</option><option>Folk</option>
+          <option>Bhajan</option><option>Bollywood</option><option>Qawwali</option>
+          <option>Hip-Hop</option><option>Pop</option><option>Classical</option></select>
+        </div>
+        <div class="row"><label>LANGUAGE</label>
+          <select name="olLang"><option>Auto Detect</option><option>Hindi</option>
+          <option>Marwadi</option><option>Urdu</option><option>Punjabi</option>
+          <option>English</option><option>Sanskrit</option></select>
+        </div>
+        <div class="actions"><button class="btn" type="submit">🔍 Analyze</button></div>
+      </form>
+    </div>
+    <div class="card hidden" id="origLyricsOutCard">
+      <textarea id="origLyricsOut" class="out" rows="14" readonly></textarea>
+      <div class="actions"><button class="btn" onclick="copyText('origLyricsOut')">📋 Copy</button></div>
+    </div>
+  </div>
+  <div id="lt-reference" class="lt-panel hidden">
+    <div class="card">
+      <h3>🔗 Reference Se Nayi Lyrics</h3>
+      <form id="refLyricsForm" class="form">
+        <div class="row"><label>NEW LANGUAGE</label>
+          <select name="rlLang">
+            <option>Same as Reference</option><option>Hindi</option><option>Marwadi</option>
+            <option>Punjabi</option><option>English</option><option>Sanskrit</option>
+            <option>Urdu</option><option>Bengali</option><option>Arabic</option>
+          </select>
+        </div>
+        <div class="row"><label>NEW VOCAL</label>
+          <select name="rlVocal">
+            <option>Same as Reference</option><option>Solo Male</option>
+            <option>Solo Female</option><option>Male Rapper</option>
+            <option>Male Classical</option><option>Duet</option><option>Choir</option>
+          </select>
+        </div>
+        <div class="row"><label>NEW THEME</label>
+          <input name="rlTheme" placeholder="Kya topic chahiye?" required/>
+        </div>
+        <div class="row"><label>STYLE</label>
+          <select name="rlStyle">
+            <option>Same style</option><option>More modern</option>
+            <option>More traditional</option><option>Remix/fusion</option>
+          </select>
+        </div>
+        <div class="row"><label>SPECIAL</label>
+          <input name="rlSpecial" placeholder="e.g., Keep mukhda, change antara"/>
+        </div>
+        <div class="actions"><button class="btn" type="submit">🎯 Generate</button></div>
+      </form>
+    </div>
+    <div class="card hidden" id="refLyricsOutCard">
+      <textarea id="refLyricsOut" class="out" rows="14" readonly></textarea>
+      <div class="actions"><button class="btn" onclick="copyText('refLyricsOut')">📋 Copy</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ NATURE ══════════ -->
+<section class="view hidden" id="view-nature">
+  <div class="card">
+    <h2>🌿 Nature Sound Studio</h2>
+    <div class="form">
+      <div class="row"><label>GENRE</label>
+        <select id="natGenre">
+          <option>Meditation / Ambient</option><option>Folk + Nature</option>
+          <option>Cinematic</option><option>Lo-Fi Chill</option>
+          <option>New Age / Healing</option><option>Electronic + Nature</option>
+          <option>Classical + Nature</option><option>Sufi / Spiritual</option>
+        </select>
+      </div>
+      <div class="row"><label>MOOD</label>
+        <select id="natMood">
+          <option>Peaceful</option><option>Mystical</option><option>Energetic</option>
+          <option>Healing</option><option>Romantic</option><option>Epic</option>
+        </select>
+      </div>
+      <div class="row"><label>BPM</label><input id="natBpm" placeholder="e.g., 60 BPM slow"/></div>
+    </div>
+  </div>
+  <div class="card"><h3>🌧️ Water</h3><div class="sound-chips">
+    <div class="chip" data-sound="soft rain drizzle">🌦️ Soft Rain</div>
+    <div class="chip" data-sound="heavy rain downpour">🌧️ Heavy Rain</div>
+    <div class="chip" data-sound="thunderstorm lightning">⛈️ Thunderstorm</div>
+    <div class="chip" data-sound="ocean waves crashing">🌊 Ocean Waves</div>
+    <div class="chip" data-sound="gentle river stream">🏞️ River</div>
+    <div class="chip" data-sound="waterfall rushing">💧 Waterfall</div>
+  </div></div>
+  <div class="card"><h3>🌬️ Wind & Sky</h3><div class="sound-chips">
+    <div class="chip" data-sound="gentle soft breeze">🍃 Breeze</div>
+    <div class="chip" data-sound="strong howling wind">💨 Strong Wind</div>
+    <div class="chip" data-sound="wind through forest trees">🌲 Forest Wind</div>
+    <div class="chip" data-sound="lightning bolt crack electric">⚡ Lightning</div>
+    <div class="chip" data-sound="thunder rumble deep bass">🌩️ Thunder</div>
+    <div class="chip" data-sound="sky atmospheric ambient">☁️ Sky Waves</div>
+  </div></div>
+  <div class="card"><h3>🐦 Birds & Morning</h3><div class="sound-chips">
+    <div class="chip" data-sound="morning birds chirping dawn">🌅 Morning Chirping</div>
+    <div class="chip" data-sound="dawn chorus birds sunrise">🌄 Dawn Chorus</div>
+    <div class="chip" data-sound="nightingale singing">🎵 Nightingale</div>
+    <div class="chip" data-sound="owl hooting night">🦉 Owl</div>
+    <div class="chip" data-sound="peacock call">🦚 Peacock</div>
+    <div class="chip" data-sound="jungle birds tropical">🌴 Jungle Birds</div>
+  </div></div>
+  <div class="card"><h3>🐾 Animals</h3><div class="sound-chips">
+    <div class="chip" data-sound="crickets chirping night">🦗 Crickets</div>
+    <div class="chip" data-sound="frogs croaking pond">🐸 Frogs</div>
+    <div class="chip" data-sound="wolf howling moonlight">🐺 Wolf Howl</div>
+    <div class="chip" data-sound="horse gallop hooves">🐴 Horse</div>
+    <div class="chip" data-sound="elephant trumpet call">🐘 Elephant</div>
+    <div class="chip" data-sound="whale song deep ocean">🐋 Whale Song</div>
+  </div></div>
+  <div class="card"><h3>🌿 Forest & Earth</h3><div class="sound-chips">
+    <div class="chip" data-sound="deep forest ambience">🌲 Deep Forest</div>
+    <div class="chip" data-sound="dry leaves rustling">🍂 Leaves</div>
+    <div class="chip" data-sound="bonfire crackling">🔥 Bonfire</div>
+    <div class="chip" data-sound="cave echo hollow">🕳️ Cave Echo</div>
+    <div class="chip" data-sound="bamboo forest wind">🎋 Bamboo</div>
+    <div class="chip" data-sound="mountain echo distant">⛰️ Mountain</div>
+  </div></div>
+  <div class="card"><h3>🌅 Time of Day</h3><div class="sound-chips">
+    <div class="chip" data-sound="early morning dawn nature">🌅 Early Morning</div>
+    <div class="chip" data-sound="noon summer heat cicadas">☀️ Noon Heat</div>
+    <div class="chip" data-sound="dusk evening birds">🌇 Dusk</div>
+    <div class="chip" data-sound="midnight night crickets">🌙 Midnight</div>
+    <div class="chip" data-sound="winter frost cold silence">❄️ Winter</div>
+    <div class="chip" data-sound="monsoon rainy season">🌧️ Monsoon</div>
+  </div></div>
+  <div class="card">
+    <h3>Selected: <span id="selCount">0</span></h3>
+    <div id="selectedSoundsDisplay" class="selected-sounds">
+      <p class="muted" id="noSelMsg">Tap sounds above to select</p>
+    </div>
+    <div class="form" style="margin-top:10px">
+      <div class="row"><label>LAYER</label>
+        <select id="natLayer">
+          <option>Background ambience (soft)</option>
+          <option>Foreground featured (prominent)</option>
+          <option>Rhythmic percussion layer</option>
+        </select>
+      </div>
+      <div class="row"><label>INTENSITY</label>
+        <select id="natIntensity">
+          <option>Subtle (10-20%)</option><option>Moderate (30-50%)</option>
+          <option>Strong (60-70%)</option><option>Dominant (80%+)</option>
+        </select>
+      </div>
+      <div class="row"><label>SPECIAL</label>
+        <input id="natSpecial" placeholder="e.g., Thunder on beat 1, rain fades at chorus"/>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnGenNature">⚡ Generate Prompt</button>
+      <button class="btn ghost" id="btnClearNature">🗑️ Clear</button>
+    </div>
+  </div>
+  <div class="card hidden" id="natureOutCard">
+    <textarea id="natureOut" class="out" rows="12" readonly></textarea>
+    <div class="actions">
+      <button class="btn" onclick="copyText('natureOut')">📋 Copy</button>
+      <a href="https://suno.com" target="_blank" class="tool-btn">🎵 Suno</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PLAYER ══════════ -->
+<section class="view hidden" id="view-player">
+  <div class="card">
+    <h2>🎧 Offline Player</h2>
+    <div class="upload-box">
+      <div class="upload-icon">🎵</div>
+      <p>MP3 / WAV / M4A / OGG</p>
+      <input type="file" id="playerFiles" accept="audio/*" multiple/>
+      <label for="playerFiles" class="btn" style="display:inline-block;margin-top:8px">📂 Load Music</label>
+    </div>
+  </div>
+  <div class="card">
+    <div class="player-disc" id="playerDisc">🎵</div>
+    <div class="player-info">
+      <div id="trackName" class="track-name">No track loaded</div>
+      <div id="trackNum" class="muted small">0 / 0</div>
+    </div>
+    <audio id="mainPlayer" class="audio" controls></audio>
+    <div class="player-controls">
+      <button class="btn ghost" id="btnPrev">⏮</button>
+      <button class="btn" id="btnPlayPause">▶️ Play</button>
+      <button class="btn ghost" id="btnNext">⏭</button>
+    </div>
+  </div>
+  <div class="card"><h3>📋 Playlist</h3><div id="playlistItems"></div></div>
+</section>
+
+<!-- ══════════ HELP ══════════ -->
+<section class="view hidden" id="view-help">
+  <div class="card">
+    <h2>📱 Install PWA</h2>
+    <p><strong>Android:</strong> Chrome → menu ⋮ → Install app</p>
+    <p><strong>iPhone:</strong> Safari → Share ⬆️ → Add to Home Screen</p>
+  </div>
+  <div class="card">
+    <h2>🛠️ Tools</h2>
+    <div class="tool-links wrap">
+      <a href="https://basicpitch.spotify.com" target="_blank" class="tool-btn">🎹 MP3→MIDI</a>
+      <a href="https://signal.vercel.app" target="_blank" class="tool-btn">🎼 MIDI Editor</a>
+      <a href="https://vocalremover.org" target="_blank" class="tool-btn">🎙️ Vocal Remove</a>
+      <a href="https://www.lalal.ai" target="_blank" class="tool-btn">🎸 Stem Split</a>
+      <a href="https://moises.ai" target="_blank" class="tool-btn">🎵 Moises</a>
+      <a href="https://suno.com" target="_blank" class="tool-btn">🎶 Suno</a>
+      <a href="https://udio.com" target="_blank" class="tool-btn">🎵 Udio</a>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="footer"><span class="muted small">AapkiDhun v4 • World Music Prompt Studio</span></footer>
+<script src="app.js"></script>
+<script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script>
 </body>
 </html>
