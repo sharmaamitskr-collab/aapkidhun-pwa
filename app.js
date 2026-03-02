@@ -1,3 +1,14 @@
+🚨 Mil Gaya Bug! app.js Mein JavaScript Errors Hain!
+
+GitHub pe jo app.js save hua hai usme quotes aur backticks corrupt ho gaye hain — isliye poora JavaScript crash ho raha hai aur koi button kaam nahi kar raha!
+
+✅ Fix — Poora app.js Replace Karo
+
+👉 Ye link kholo:
+https://github.com/sharmaamitskr-collab/aapkidhun-pwa/edit/main/app.js
+
+Ctrl+A → Delete → Paste karo ye poora code:
+
 'use strict';
 const $ = id => document.getElementById(id);
 const views = ['home','prompt','presets','recorder','transcribe','analyze','lyrics','nature','player','help'];
@@ -20,25 +31,25 @@ function copyText(id) {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(el.value).catch(() => { el.select(); document.execCommand('copy'); });
   } else { el.select(); document.execCommand('copy'); }
-  const btns = document.querySelectorAll(`button[onclick*="${id}"]`);
+  const btns = document.querySelectorAll(button[onclick*="${id}"]);
   btns.forEach(b => { const t = b.textContent; b.textContent = '✅ Copied!'; setTimeout(() => b.textContent = t, 1500); });
 }
 function printText(id, title) {
   const el = $(id); if (!el || !el.value) return;
   const w = window.open('', '_blank');
-  w.document.write(`<!doctype html><html><head><title>${title}</title><style>body{font-family:monospace;white-space:pre-wrap;padding:20px;font-size:12px;line-height:1.7}</style></head><body>${el.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</body></html>`);
+  w.document.write(${title}body{font-family:monospace;white-space:pre-wrap;padding:20px;font-size:12px;line-height:1.7}${el.value.replace(/&/g,'&amp;').replace(//g,'&gt;')});
   w.document.close(); w.print();
 }
 
 function buildSunoPrompt(d) {
   const bpm = d.tempo || 'mid-tempo';
-  const lang = (d.language && d.language !== 'None (Instrumental)') ? `, ${d.language} language` : '';
-  let p = `${d.theme ? d.theme + '. ' : ''}${d.stylePack || d.mode} composition, ${bpm}, ${d.rhythm || '4/4'}${lang}. `;
-  p += `${d.vocal}. `;
-  p += `Instruments: ${d.instruments || 'traditional instruments'}. `;
-  if (d.lyricsRule) p += `${d.lyricsRule}. `;
-  if (d.special) p += `${d.special} `;
-  p += `\nReinforcement: Maintain ${d.stylePack || d.mode} authenticity. Natural organic sound.`;
+  const lang = (d.language && d.language !== 'None (Instrumental)') ? , ${d.language} language : '';
+  let p = ${d.theme ? d.theme + '. ' : ''}${d.stylePack || d.mode} composition, ${bpm}, ${d.rhythm || '4/4'}${lang}. ;
+  p += ${d.vocal}. ;
+  p += Instruments: ${d.instruments || 'traditional instruments'}. ;
+  if (d.lyricsRule) p += ${d.lyricsRule}. ;
+  if (d.special) p += ${d.special} ;
+  p += \nReinforcement: Maintain ${d.stylePack || d.mode} authenticity. Natural organic sound.;
   if (p.length > 900) p = p.substring(0, 897) + '...';
   return p.trim();
 }
@@ -48,7 +59,7 @@ $('promptForm')?.addEventListener('submit', e => {
   const d = Object.fromEntries(new FormData(e.target));
   const out = buildSunoPrompt(d);
   $('promptOut').value = out;
-  $('charCount').textContent = `(${out.length}/900 chars)`;
+  $('charCount').textContent = (${out.length}/900 chars);
   $('promptOutCard')?.classList.remove('hidden');
   $('promptOutCard')?.scrollIntoView({ behavior: 'smooth' });
 });
@@ -73,30 +84,30 @@ const builtInPresets = [
 
 function renderPresets() {
   const list = $('builtInList'); if (!list) return;
-  list.innerHTML = builtInPresets.map(p => `<div class="presetItem"><h3>${p.title}</h3><div class="meta muted small">${p.meta}</div><div class="rowbtn"><button class="btn" onclick="loadPreset('${p.id}')">📂 Load</button><button class="btn ghost" onclick="genPreset('${p.id}')">⚡ Generate</button></div></div>`).join('');
+  list.innerHTML = builtInPresets.map(p => ${p.title}${p.meta}📂 Load⚡ Generate).join('');
 }
 function loadPreset(id) {
   const p = builtInPresets.find(x => x.id === id); if (!p) return;
-  Object.entries(p.data).forEach(([k,v]) => { const el = $('promptForm')?.querySelector(`[name="${k}"]`); if (el) el.value = v; });
+  Object.entries(p.data).forEach(([k,v]) => { const el = $('promptForm')?.querySelector([name="${k}"]); if (el) el.value = v; });
   show('prompt');
 }
 function genPreset(id) {
   const p = builtInPresets.find(x => x.id === id); if (!p) return;
   const out = buildSunoPrompt(p.data);
   $('promptOut').value = out;
-  $('charCount').textContent = `(${out.length}/900 chars)`;
+  $('charCount').textContent = (${out.length}/900 chars);
   $('promptOutCard')?.classList.remove('hidden');
   show('prompt');
 }
 function renderMyPresets() {
   const list = $('myPresetList'); if (!list) return;
   const arr = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  list.innerHTML = arr.length ? arr.map((p,i) => `<div class="presetItem"><h3>${p.name}</h3><div class="rowbtn"><button class="btn" onclick="loadMy(${i})">📂 Load</button><button class="btn ghost" onclick="delPreset(${i})">🗑️</button></div></div>`).join('') : '<p class="muted">No saved presets.</p>';
+  list.innerHTML = arr.length ? arr.map((p,i) => ${p.name}📂 Load🗑️).join('') : 'No saved presets.';
 }
 function loadMy(i) {
   const arr = JSON.parse(localStorage.getItem('myPresets') || '[]');
   const p = arr[i]; if (!p) return;
-  Object.entries(p.data).forEach(([k,v]) => { const el = $('promptForm')?.querySelector(`[name="${k}"]`); if (el) el.value = v; });
+  Object.entries(p.data).forEach(([k,v]) => { const el = $('promptForm')?.querySelector([name="${k}"]); if (el) el.value = v; });
   show('prompt');
 }
 function delPreset(i) {
@@ -275,8 +286,6 @@ SWING FACTOR   : [straight/light/medium/heavy]
 
 4-BAR GROOVE:
 Beat: 1 + 2 + 3 + 4 +
-[P1]: D . d . D . d .
-[P2]: . X . . X . . X
 
 ABC:
 X:2
@@ -302,4 +311,235 @@ FOR EACH INSTRUMENT:
 
 function buildVocalSheet(srcLabel, genre, vocal) {
   const g = genre === 'auto' ? 'Auto-detect' : genre;
-  const v = vocal === '
+  const v = vocal === 'auto' ? 'Auto-detect' : vocal;
+  return `🎤 VOCAL ANALYSIS — ${srcLabel}
+Genre: ${g} | Vocal: ${v}
+══════════════════════════════════
+TYPE    : [detect]
+RANGE   : [lowest – highest]
+LANG    : [detect]
+
+NOTE-BY-NOTE:
+[time] [note] "[syllable]" [ornament] [conf%]
+
+ORNAMENTS: Meend / Gamak / Murki / Kan
+BREATH MARKS: [timestamps]
+FULL LYRICS: [original | phonetic | meaning]`;
+}
+
+const tPresets = [
+  { id:'folk', label:'🪘 Folk/Regional', genre:'Regional Folk', inst:'Dholak, Harmonium, Flute, Khartal' },
+  { id:'hindustani', label:'🎵 Hindustani Classical', genre:'Hindustani Classical', inst:'Tabla, Sitar, Harmonium, Tanpura' },
+  { id:'carnatic', label:'🎶 Carnatic', genre:'Carnatic Classical', inst:'Mridangam, Veena, Violin, Ghatam' },
+  { id:'qawwali', label:'🌙 Qawwali/Sufi', genre:'Qawwali', inst:'Harmonium, Tabla, Dholak, Chorus' },
+  { id:'bollywood', label:'🎬 Bollywood', genre:'Bollywood', inst:'Strings, Tabla, Guitar, Piano, Brass' },
+  { id:'jazz', label:'🎷 Jazz', genre:'Jazz', inst:'Piano, Bass, Drums, Sax, Trumpet' },
+  { id:'western', label:'🎻 Western Classical', genre:'Western Classical', inst:'Violin, Cello, Piano, Woodwinds' },
+  { id:'hiphop', label:'🎤 Hip-Hop', genre:'Hip-Hop', inst:'808 Bass, Hi-hat, Snare, Synth' },
+  { id:'edm', label:'🎛️ EDM', genre:'EDM', inst:'Synth Lead, Bass Drop, Kick Drum' },
+  { id:'flamenco', label:'💃 Flamenco', genre:'Flamenco', inst:'Spanish Guitar, Cajon, Castanets' },
+  { id:'reggae', label:'🌿 Reggae', genre:'Reggae', inst:'Bass Guitar, Rhythm Guitar, Drums' },
+  { id:'world', label:'🌍 World Fusion', genre:'World Fusion', inst:'Global instruments mix' }
+];
+const tSel = $('transcribeGenre');
+if (tSel) {
+  tPresets.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.label; tSel.appendChild(o); });
+  tSel.addEventListener('change', () => { const p = tPresets.find(x => x.id === tSel.value); if (p) $('transcribeInst').value = p.inst; });
+}
+
+$('ttabFile')?.addEventListener('click', () => { $('ttabFile').classList.add('active'); $('ttabLink')?.classList.remove('active'); $('tFileArea')?.classList.remove('hidden'); $('tLinkArea')?.classList.add('hidden'); });
+$('ttabLink')?.addEventListener('click', () => { $('ttabLink').classList.add('active'); $('ttabFile')?.classList.remove('active'); $('tLinkArea')?.classList.remove('hidden'); $('tFileArea')?.classList.add('hidden'); });
+
+let tUploadedFile = '';
+$('tAudioFile')?.addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  tUploadedFile = file.name;
+  const url = URL.createObjectURL(file);
+  const info = $('tFileInfo');
+  if (info) { info.className = 'file-info-box'; info.innerHTML = 📁 ${file.name}${(file.size/1024/1024).toFixed(2)} MB; }
+  $('tUploadBox')?.classList.add('hidden');
+});
+
+$('btnTranscribe')?.addEventListener('click', () => {
+  const genreId = $('transcribeGenre')?.value;
+  const p = tPresets.find(x => x.id === genreId);
+  const genre = p?.genre || 'Auto-detect';
+  const inst = $('transcribeInst')?.value || p?.inst || 'Auto-detect';
+  const key = $('transcribeKey')?.value || 'Auto-detect';
+  const bpm = $('transcribeTempo')?.value || 'Auto-detect';
+  const tLink = $('tUrl')?.value?.trim();
+  const srcLabel = tUploadedFile ? File: ${tUploadedFile} : (tLink ? 'Online source' : 'Audio source');
+  $('transcribeOut').value = buildMusicSheet(srcLabel, genre, key, bpm, 'Auto-detect') + \n\nINSTRUMENTS TO DETECT: ${inst};
+  $('transcribeOutCard')?.classList.remove('hidden');
+  $('transcribeOutCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+$('btnCopyT')?.addEventListener('click', () => copyText('transcribeOut'));
+$('btnPrintT')?.addEventListener('click', () => printText('transcribeOut', 'Music Sheet'));
+
+let uploadedFile = '';
+$('utabFile')?.addEventListener('click', () => { $('utabFile').classList.add('active'); $('utabLink')?.classList.remove('active'); $('uploadFileArea')?.classList.remove('hidden'); $('uploadLinkArea')?.classList.add('hidden'); });
+$('utabLink')?.addEventListener('click', () => { $('utabLink').classList.add('active'); $('utabFile')?.classList.remove('active'); $('uploadLinkArea')?.classList.remove('hidden'); $('uploadFileArea')?.classList.add('hidden'); });
+
+$('audioFile')?.addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  uploadedFile = file.name;
+  const url = URL.createObjectURL(file);
+  const fi = $('fileInfo');
+  if (fi) { fi.className = 'file-info-box'; fi.innerHTML = 📁 ${file.name}${(file.size/1024/1024).toFixed(2)} MB · ${file.type||'audio'}✕ Remove; }
+  $('uploadBox')?.classList.add('hidden');
+});
+
+function resetUpload() {
+  uploadedFile = '';
+  const fi = $('fileInfo'); if (fi) { fi.className = 'hidden'; fi.innerHTML = ''; }
+  $('uploadBox')?.classList.remove('hidden');
+}
+
+$('btnAnalyze')?.addEventListener('click', () => {
+  const link = $('analyzeUrl')?.value?.trim();
+  if (!uploadedFile && !link) { alert('File upload karo ya link paste karo!'); return; }
+  const srcLabel = uploadedFile ? File: ${uploadedFile} : 'Online source provided';
+  const genre = $('analyzeGenre')?.value || 'auto';
+  const key = $('analyzeKey')?.value || '';
+  const bpm = $('analyzeBpm')?.value || '';
+  const vocal = $('analyzeVocal')?.value || 'auto';
+  $('sheetOut').value = buildMusicSheet(srcLabel, genre, key, bpm, vocal);
+  $('beatOut').value = buildBeatSheet(srcLabel, genre, bpm);
+  $('instrOut').value = buildInstrSheet(srcLabel, genre, key);
+  $('vocalOut').value = buildVocalSheet(srcLabel, genre, vocal);
+  $('fullOut').value = buildSunoReplicationPrompt(srcLabel, genre, key, bpm, vocal);
+  $('analyzeOutCard')?.classList.remove('hidden');
+  $('analyzeOutCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+document.querySelectorAll('.rtab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.rt-panel').forEach(p => p.classList.add('hidden'));
+    btn.classList.add('active');
+    $('rt-' + btn.dataset.rt)?.classList.remove('hidden');
+  });
+});
+
+$('btnNewCompose')?.addEventListener('click', () => {
+  const lang = $('newLang')?.value || 'Hindi';
+  const vocal = $('newVocal')?.value || 'Solo Male';
+  const theme = $('newTheme')?.value || 'custom theme';
+  const keep = $('keepFrom')?.value || 'same energy and feel';
+  const genre = $('analyzeGenre')?.value || 'Folk';
+  const bpm = $('analyzeBpm')?.value || 'same BPM';
+  const key = $('analyzeKey')?.value || 'same key';
+  $('newComposeOut').value = [High-fidelity stereo, warm analog texture]\n\n${genre} composition, ${bpm}, ${key}, ${lang} lyrics.\n${vocal} — authentic phrasing.\nTheme: ${theme}\nKeep: ${keep}\n\n[Intro] establish mood\n[Verse 1] ${lang} lyrics, ${theme}\n[Chorus] hook in ${lang}\n[Outro] fade\n\nTempo: ${bpm} | Key: ${key} | Vocal: ${vocal}\nReinforcement: Fresh ${lang} lyrics — same feel as reference;
+});
+
+document.querySelectorAll('.ltab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ltab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lt-panel').forEach(p => p.classList.add('hidden'));
+    btn.classList.add('active');
+    $('lt-' + btn.dataset.lt)?.classList.remove('hidden');
+  });
+});
+
+$('newLyricsForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  const prov = d.nlProvider === 'auto' ? 'Use best AI judgment.' : Optimized for ${d.nlProvider}.;
+  $('newLyricsOut').value = ✍️ NEW LYRICS PROMPT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nGenre: ${d.nlGenre} | Lang: ${d.nlLang} | Vocal: ${d.nlVocal}\nTheme: ${d.nlTheme} | Mood: ${d.nlMood}\nStruct: ${d.nlStruct} | BPM: ${d.nlBpm||'medium'}\n${d.nlSpecial?'Special: '+d.nlSpecial:''}\n${prov}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nWRITE:\n[Mukhda/Hook] catchy 2-4 lines, AABB rhyme\n[Verse 1] develop theme: ${d.nlTheme}\n[Verse 2] fresh angle, escalate emotion\n[Bridge] contrast/resolution\n\nOutput: full lyrics + section labels + melody hints (UP/DOWN/HOLD);
+  $('newLyricsOutCard')?.classList.remove('hidden');
+  $('newLyricsOutCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+$('origLyricsForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  $('origLyricsOut').value = 📝 LYRICS ANALYSIS\nGenre: ${d.olGenre} | Lang: ${d.olLang}\n\nANALYZE:\n${d.olLyrics?.trim()||'[Paste lyrics above]'}\n\n1. Translation\n2. Structure map\n3. Rhyme scheme\n4. Syllable count\n5. Emotional arc\n6. Cultural references\n7. Melody suggestions\n8. Singability score;
+  $('origLyricsOutCard')?.classList.remove('hidden');
+  $('origLyricsOutCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+$('refLyricsForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  $('refLyricsOut').value = 🔗 REFERENCE LYRICS\nNew Lang: ${d.rlLang} | Vocal: ${d.rlVocal}\nTheme: ${d.rlTheme} | Style: ${d.rlStyle}\n${d.rlSpecial?'Special: '+d.rlSpecial:''}\n\nCREATE: same meter + rhyme, new theme\nOutput: side-by-side original vs new;
+  $('refLyricsOutCard')?.classList.remove('hidden');
+  $('refLyricsOutCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+let selSounds = [];
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    const s = c.dataset.sound;
+    if (c.classList.contains('active')) { c.classList.remove('active'); selSounds = selSounds.filter(x => x !== s); }
+    else { c.classList.add('active'); selSounds.push(s); }
+    const cnt = $('selCount'); if (cnt) cnt.textContent = selSounds.length;
+    const disp = $('selectedSoundsDisplay'), m = $('noSelMsg');
+    if (!disp) return;
+    disp.querySelectorAll('.sel-tag').forEach(t => t.remove());
+    if (!selSounds.length) { if(m) m.style.display=''; return; }
+    if(m) m.style.display='none';
+    selSounds.forEach(s => {
+      const t = document.createElement('span'); t.className = 'sel-tag';
+      t.textContent = s.split(' ').slice(0,3).join(' ') + ' ✕';
+      t.onclick = () => { selSounds = selSounds.filter(x => x !== s); document.querySelectorAll(.chip[data-sound="${CSS.escape(s)}"]).forEach(c => c.classList.remove('active')); $('selCount').textContent = selSounds.length; t.remove(); if(!selSounds.length && m) m.style.display=''; };
+      disp.appendChild(t);
+    });
+  });
+});
+
+$('btnClearNature')?.addEventListener('click', () => {
+  selSounds = []; document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  $('selCount').textContent = '0';
+  const d = $('selectedSoundsDisplay'); if (d) d.querySelectorAll('.sel-tag').forEach(t => t.remove());
+  const m = $('noSelMsg'); if (m) m.style.display='';
+});
+
+$('btnGenNature')?.addEventListener('click', () => {
+  if (!selSounds.length) { alert('Koi sound select karo!'); return; }
+  const g = $('natGenre')?.value||'Ambient', mood = $('natMood')?.value||'Peaceful';
+  const bpm = $('natBpm')?.value||'70 BPM', layer = $('natLayer')?.value||'Background';
+  const intensity = $('natIntensity')?.value||'Moderate', special = $('natSpecial')?.value||'';
+  $('natureOut').value = [Stereo, spatial 3D, organic]\n\n${g}, ${bpm}, ${mood} mood.\nNature: ${selSounds.slice(0,5).join(', ')}.\n${layer}, ${intensity}.\n${special||'Blend nature sounds with music.'}\n\n[Intro] nature only — ${selSounds[0]}\n[Build] music enters softly\n[Main] full — nature at ${intensity}\n[Outro] music fades, nature returns\n\nMood: ${mood} | Tempo: ${bpm}\nReinforcement: organic character throughout;
+  $('natureOutCard')?.classList.remove('hidden');
+  $('natureOutCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+let playlist = [], curTrack = 0;
+$('playerFiles')?.addEventListener('change', e => {
+  const files = Array.from(e.target.files); if (!files.length) return;
+  playlist = files.map(f => ({ name: f.name, url: URL.createObjectURL(f) }));
+  curTrack = 0; renderPL(); loadTrack(0);
+});
+function renderPL() {
+  const c = $('playlistItems'); if (!c) return;
+  c.innerHTML = playlist.map((t,i) => ${i===curTrack?'▶️':'🎵'} ${t.name}).join('');
+}
+function loadTrack(i) {
+  if (i = playlist.length) return;
+  curTrack = i;
+  const p = $('mainPlayer'); if (p) { p.src = playlist[i].url; p.play().catch(()=>{}); }
+  $('trackName').textContent = playlist[i].name;
+  $('trackNum').textContent = ${i+1} / ${playlist.length};
+  $('btnPlayPause').textContent = '⏸ Pause';
+  $('playerDisc')?.classList.add('spinning');
+  renderPL();
+}
+$('btnPlayPause')?.addEventListener('click', () => {
+  const p = $('mainPlayer'); if (!p) return;
+  if (p.paused) { p.play(); $('btnPlayPause').textContent = '⏸ Pause'; $('playerDisc')?.classList.add('spinning'); }
+  else { p.pause(); $('btnPlayPause').textContent = '▶️ Play'; $('playerDisc')?.classList.remove('spinning'); }
+});
+$('btnPrev')?.addEventListener('click', () => loadTrack(curTrack - 1));
+$('btnNext')?.addEventListener('click', () => loadTrack(curTrack + 1));
+$('mainPlayer')?.addEventListener('ended', () => { if (curTrack < playlist.length - 1) loadTrack(curTrack + 1); else $('playerDisc')?.classList.remove('spinning'); });
+
+renderPresets();
+renderMyPresets();
+show('home');
+
+Steps:
+1. 👉 https://github.com/sharmaamitskr-collab/aapkidhun-pwa/edit/main/app.js
+2. Ctrl+A → Delete
+3. Upar wala code paste karo
+4. Commit changes dabao
+5. 3 min baad incognito mein check karo ✅
