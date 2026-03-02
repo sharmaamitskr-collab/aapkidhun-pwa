@@ -30,12 +30,10 @@
     <button class="tab" data-view="help">❓ Help</button>
   </nav>
   <main class="container">
-
-    <!-- HOME -->
     <section class="view" id="view-home">
       <div class="card hero">
         <h1>🎵 AapkiDhun</h1>
-        <p class="muted">MP3/Video upload karo — exact instruments, beats, vocal/music alag alag prompt pao!</p>
+        <p class="muted">MP3/Video upload karo — Vocal + Music + Beat alag alag prompt pao!</p>
         <div class="grid2">
           <button class="btn" data-goto="analyze">🔬 Analyze Music</button>
           <button class="btn" data-goto="transcribe">🎼 Transcribe</button>
@@ -53,8 +51,6 @@
         </div>
       </div>
     </section>
-
-    <!-- PROMPT -->
     <section class="view hidden" id="view-prompt">
       <div class="card">
         <h2>🎵 Create Music Prompt</h2>
@@ -72,8 +68,8 @@
           <div class="row"><label>LYRICS RULE</label><input name="lyricsRule" value="Clear pronunciation, short hook, call-response" /></div>
           <div class="row"><label>REFERENCE</label><input name="reference" placeholder="YouTube/audio link" /></div>
           <div class="actions">
-            <button class="btn" type="submit">⚡ Generate Prompt</button>
-            <button class="btn ghost" type="button" id="btnSavePreset">💾 Save Preset</button>
+            <button class="btn" type="submit">⚡ Generate</button>
+            <button class="btn ghost" type="button" id="btnSavePreset">💾 Save</button>
           </div>
         </form>
       </div>
@@ -86,14 +82,10 @@
         </div>
       </div>
     </section>
-
-    <!-- PRESETS -->
     <section class="view hidden" id="view-presets">
       <div class="card"><h2>🎛️ Presets</h2><div id="presetList" class="presetList"></div></div>
       <div class="card"><h2>💾 My Saved Presets</h2><div id="myPresetList" class="presetList"></div></div>
     </section>
-
-    <!-- RECORDER -->
     <section class="view hidden" id="view-recorder">
       <div class="card">
         <h2>🎤 Voice Recorder</h2>
@@ -106,17 +98,13 @@
         <audio id="playback" controls class="audio"></audio>
       </div>
     </section>
-
-    <!-- TRANSCRIBE -->
     <section class="view hidden" id="view-transcribe">
       <div class="card">
         <h2>🎼 World Music Transcriber</h2>
         <p class="muted">YouTube/audio link dalo — full analysis prompt milega</p>
         <form id="tForm" class="form">
           <div class="row"><label>🔗 URL</label><input name="url" placeholder="https://youtube.com/watch?v=..." required/></div>
-          <div class="row"><label>🎵 Genre</label>
-            <select name="gp" id="tGenre"></select>
-          </div>
+          <div class="row"><label>🎵 Genre</label><select name="gp" id="tGenre"></select></div>
           <div class="row"><label>🎸 Instruments</label><input name="inst" id="tInst" placeholder="Auto-fill"/></div>
           <div class="row"><label>🎹 Key</label><input name="key" placeholder="Auto-detect"/></div>
           <div class="row"><label>🥁 Tempo</label><input name="tempo" placeholder="Auto-detect BPM"/></div>
@@ -133,27 +121,20 @@
         <p class="muted small">👆 ChatGPT/Gemini me paste karo!</p>
       </div>
     </section>
-
-    <!-- ANALYZE -->
     <section class="view hidden" id="view-analyze">
       <div class="card">
         <h2>🔬 Music Analyzer</h2>
         <p class="muted">MP3/Video upload karo — Vocal + Music + Beat alag alag prompt milega!</p>
-
         <div class="upload-box" id="uploadBox">
-          <div class="upload-inner">
-            <div class="upload-icon">🎵</div>
-            <p>MP3 / MP4 / WAV file tap karke select karo</p>
-            <input type="file" id="fileInput" accept="audio/*,video/*" style="display:none"/>
-            <button class="btn" id="btnUpload">📁 File Select Karo</button>
-          </div>
+          <div class="upload-icon">🎵</div>
+          <p>MP3 / MP4 / WAV file select karo</p>
+          <input type="file" id="fileInput" accept="audio/*,video/*" style="display:none"/>
+          <button class="btn" id="btnUpload">📁 File Select Karo</button>
         </div>
-
         <div id="fileInfo" style="display:none" class="file-info">
           <span id="fileName">—</span>
           <span id="fileSize" class="muted small"></span>
         </div>
-
         <form id="analyzeForm" class="form" style="margin-top:12px">
           <div class="row"><label>🎵 Genre</label>
             <select name="aGenre" id="aGenre">
@@ -166,8 +147,8 @@
               <option value="world">🌍 World Music</option>
             </select>
           </div>
-          <div class="row"><label>🎹 Key (optional)</label><input name="aKey" placeholder="Auto-detect"/></div>
-          <div class="row"><label>🥁 BPM (optional)</label><input name="aBpm" placeholder="Auto-detect"/></div>
+          <div class="row"><label>🎹 Key</label><input name="aKey" placeholder="Auto-detect"/></div>
+          <div class="row"><label>🥁 BPM</label><input name="aBpm" placeholder="Auto-detect"/></div>
           <div class="row"><label>🎤 Vocal Style</label>
             <select name="aVocal">
               <option>Male Solo</option>
@@ -178,15 +159,11 @@
             </select>
           </div>
           <div class="actions">
-            <button class="btn" type="submit" id="btnAnalyze">🔬 Generate Analysis Prompts</button>
+            <button class="btn" type="submit" id="btnAnalyze">🔬 Generate Prompts</button>
           </div>
         </form>
       </div>
-
-      <!-- OUTPUT CARDS -->
       <div id="analyzeOut" style="display:none">
-
-        <!-- BEAT SYNC -->
         <div class="card">
           <h2>🥁 Beat + Rhythm Prompt</h2>
           <textarea id="beatPrompt" class="out" rows="14" readonly></textarea>
@@ -195,8 +172,6 @@
             <button class="btn ghost" onclick="printText('beatPrompt','Beat Sync Prompt')">🖨️ PDF</button>
           </div>
         </div>
-
-        <!-- INSTRUMENTS -->
         <div class="card">
           <h2>🎸 Instruments Prompt</h2>
           <textarea id="instrPrompt" class="out" rows="14" readonly></textarea>
@@ -205,8 +180,6 @@
             <button class="btn ghost" onclick="printText('instrPrompt','Instruments Prompt')">🖨️ PDF</button>
           </div>
         </div>
-
-        <!-- VOCAL -->
         <div class="card">
           <h2>🎤 Vocal Prompt</h2>
           <textarea id="vocalPrompt" class="out" rows="14" readonly></textarea>
@@ -215,8 +188,6 @@
             <button class="btn ghost" onclick="printText('vocalPrompt','Vocal Prompt')">🖨️ PDF</button>
           </div>
         </div>
-
-        <!-- FULL -->
         <div class="card">
           <h2>🎵 Full Composition Prompt</h2>
           <textarea id="fullPrompt" class="out" rows="18" readonly></textarea>
@@ -225,22 +196,17 @@
             <button class="btn ghost" onclick="printText('fullPrompt','Full Composition Prompt')">🖨️ PDF</button>
           </div>
         </div>
-
-        <!-- TOOLS -->
         <div class="card">
-          <h2>🔧 Next Steps — Online Tools</h2>
+          <h2>🔧 Online Tools</h2>
           <div class="grid2">
             <a class="btn" href="https://basicpitch.spotify.com" target="_blank">🎹 MP3→MIDI</a>
             <a class="btn" href="https://signal.vercel.app" target="_blank">🎼 MIDI Editor</a>
-            <a class="btn" href="https://vocalremover.org" target="_blank">🎤 Stem Separator</a>
-            <a class="btn" href="https://www.lalal.ai" target="_blank">🎸 Lalal.ai</a>
+            <a class="btn" href="https://vocalremover.org" target="_blank">🎤 Vocal Remover</a>
+            <a class="btn" href="https://www.lalal.ai" target="_blank">🎸 Stem Separator</a>
           </div>
         </div>
-
       </div>
     </section>
-
-    <!-- HELP -->
     <section class="view hidden" id="view-help">
       <div class="card">
         <h2>📱 Install PWA</h2>
@@ -250,9 +216,8 @@
         </div>
       </div>
     </section>
-
   </main>
-  <footer class="footer"><span class="muted small">AapkiDhun PWA • Music Prompt Studio</span></footer>
+  <footer class="footer"><span class="muted small">AapkiDhun PWA • Music Prompt Studio 🎵</span></footer>
   <script src="app.js"></script>
   <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
 </body>
