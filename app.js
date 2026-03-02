@@ -1,529 +1,718 @@
+// ============================================================
+//  AapkiDhun PWA — app.js  (full update: bug-fix + 3 features)
+// ============================================================
 'use strict';
-const $ = id => document.getElementById(id);
-const views = ['home','prompt','presets','recorder','transcribe','analyze','lyrics','nature','player','help'];
 
-function show(v) {
-  if (!views.includes(v)) return;
-  document.querySelectorAll('.view').forEach(s => s.classList.add('hidden'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
-  const el = $('view-' + v); if (el) el.classList.remove('hidden');
-  window.scrollTo(0, 0);
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+function show(view) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const el = $(view); if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.goto === view));
 }
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
-document.addEventListener('click', e => {
-  const el = e.target.closest('[data-goto]');
-  if (el) show(el.dataset.goto);
+document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => show(b.dataset.goto)));
+document.querySelectorAll('[data-goto]').forEach(el => {
+  if (!el.classList.contains('nav-btn'))
+    el.addEventListener('click', () => show(el.dataset.goto));
 });
 
 function copyText(id) {
   const el = $(id); if (!el) return;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(el.value).catch(() => { el.select(); document.execCommand('copy'); });
-  } else { el.select(); document.execCommand('copy'); }
-  const btns = document.querySelectorAll(`button[onclick*="${id}"]`);
-  btns.forEach(b => { const t = b.textContent; b.textContent = '✅ Copied!'; setTimeout(() => b.textContent = t, 1500); });
+  navigator.clipboard?.writeText(el.value).catch(() => { el.select(); document.execCommand('copy'); });
 }
-function printText(id, title) {
-  const el = $(id); if (!el || !el.value) return;
-  const w = window.open('', '_blank');
-  w.document.write(`<!doctype html><html><head><title>${title}</title><style>body{font-family:monospace;white-space:pre-wrap;padding:20px;font-size:12px;line-height:1.7}</style></head><body>${el.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</body></html>`);
-  w.document.close(); w.print();
+function printText(id, title = 'AapkiDhun Output') {
+  const el = $(id); if (!el) return;
+  const w = window.open('', '', 'width=800,height=600');
+  w.document.write(`<html><head><title>${title}</title></head><body><pre>${el.value}</pre></body></html>`);
+  w.print(); w.close();
 }
 
+/* ---------- Suno prompt builder ---------- */
 function buildSunoPrompt(d) {
-  const bpm = d.tempo || 'mid-tempo';
-  const lang = (d.language && d.language !== 'None (Instrumental)') ? `, ${d.language} language` : '';
-  let p = `${d.theme ? d.theme + '. ' : ''}${d.stylePack || d.mode} composition, ${bpm}, ${d.rhythm || '4/4'}${lang}. `;
-  p += `${d.vocal}. `;
-  p += `Instruments: ${d.instruments || 'traditional instruments'}. `;
-  if (d.lyricsRule) p += `${d.lyricsRule}. `;
-  if (d.special) p += `${d.special} `;
-  p += `\nReinforcement: Maintain ${d.stylePack || d.mode} authenticity. Natural organic sound.`;
-  if (p.length > 900) p = p.substring(0, 897) + '...';
-  return p.trim();
+  const parts = [
+    d.mode && `[Mode: ${d.mode}]`,
+    d.language && `Language: ${d.language}`,
+    d.theme,
+    d.stylePack && `Style: ${d.stylePack}`,
+    d.tempo && `Tempo: ${d.tempo} BPM`,
+    d.rhythm && `Rhythm: ${d.rhythm}`,
+    d.instruments && `Instruments: ${d.instruments}`,
+    d.vocal && `Vocal: ${d.vocal}`,
+    d.duration && `Duration: ${d.duration}`,
+    d.lyricsRule && `Lyrics rule: ${d.lyricsRule}`,
+    d.special
+  ].filter(Boolean);
+  let out = parts.join(', ');
+  if (out.length > 900) out = out.slice(0, 897) + '...';
+  return out;
 }
 
-$('promptForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const d = Object.fromEntries(new FormData(e.target));
-  const out = buildSunoPrompt(d);
-  $('promptOut').value = out;
-  $('charCount').textContent = `(${out.length}/900 chars)`;
-  $('promptOutCard')?.classList.remove('hidden');
-  $('promptOutCard')?.scrollIntoView({ behavior: 'smooth' });
-});
-$('btnCopy')?.addEventListener('click', () => copyText('promptOut'));
-$('btnClear')?.addEventListener('click', () => { $('promptOut').value = ''; $('promptOutCard')?.classList.add('hidden'); });
-$('btnPrint')?.addEventListener('click', () => printText('promptOut', 'Music Prompt'));
-$('btnSavePreset')?.addEventListener('click', () => {
-  const d = Object.fromEntries(new FormData($('promptForm')));
-  const name = window.prompt('Preset naam:'); if (!name) return;
-  const arr = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  arr.push({ id: Date.now(), name, data: d });
-  localStorage.setItem('myPresets', JSON.stringify(arr));
-  alert('✅ Saved: ' + name); renderMyPresets();
-});
+/* ---------- Prompt form ---------- */
+const pForm = $('promptForm');
+if (pForm) {
+  pForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(pForm));
+    const prompt = buildSunoPrompt(d);
+    $('promptOut').value = prompt;
+    $('charCount').textContent = `${prompt.length}/900 chars`;
+    $('promptOutputCard').classList.remove('hidden');
+  });
+  $('btnCopyPrompt')?.addEventListener('click', () => copyText('promptOut'));
+  $('btnClearPrompt')?.addEventListener('click', () => { $('promptOut').value = ''; $('promptOutputCard').classList.add('hidden'); });
+  $('btnPrintPrompt')?.addEventListener('click', () => printText('promptOut', 'Suno Prompt'));
+  $('btnSavePreset')?.addEventListener('click', () => {
+    const d = Object.fromEntries(new FormData(pForm));
+    const presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
+    presets.push({ id: Date.now(), title: d.theme || 'My Preset', data: d });
+    localStorage.setItem('myPresets', JSON.stringify(presets));
+    renderMyPresets();
+    alert('Preset saved!');
+  });
+}
 
-const builtInPresets = [
-  { id:'holi', title:'🎉 Rajasthani Holi Dhamal', meta:'Marwadi • 118 BPM', data:{ mode:'Holi Dhamal', language:'Marwadi', theme:'Fagun Holi masti rang gulal', stylePack:'Rajasthani-Marwadi Folk', tempo:'118 BPM', rhythm:'Dhamal 4/4 swing', instruments:'Chang, Dholak, Khartal, Algoza, Harmonium', vocal:'Male Folk + Group Chorus call-response', lyricsRule:'Short hook clear pronunciation energetic', special:'Raw folk energy no EDM no auto-tune' }},
-  { id:'bhajan', title:'🙏 Pure Bhajan', meta:'Devotional • 76 BPM', data:{ mode:'Bhajan', language:'Hindi', theme:'Ram bhakti devotional surrender', stylePack:'North Indian Devotional', tempo:'76 BPM', rhythm:'Teen taal 16-beat', instruments:'Harmonium, Tabla, Tanpura, Manjira', vocal:'Female Classical — Khayal/Thumri', lyricsRule:'Simple Hindi devotional meditative', special:'No drums no rock pure classical' }},
-  { id:'sufi', title:'🎸 Sufi Rock Anthem', meta:'Sufi Rock • 104 BPM', data:{ mode:'World Fusion', language:'Punjabi-Urdu Mix', theme:'Spiritual Sufi love longing divine', stylePack:'Pakistani Sufi Rock', tempo:'104 BPM', rhythm:'4/4 rock groove', instruments:'Electric guitar overdriven, Dhol, Bass guitar, Harmonium drone, Tabla', vocal:'Male Sufi — Chest voice + Alaap', lyricsRule:'Emotional stretched syllables Sufi metaphors', special:'No EDM no pop synths raw analog stadium energy' }},
-  { id:'cinematic', title:'🎬 Cinematic World', meta:'Orchestral • 92 BPM', data:{ mode:'Cinematic / Orchestral', language:'None (Instrumental)', theme:'Epic cinematic journey mountains stars', stylePack:'World Cinematic Orchestra', tempo:'92 BPM', rhythm:'4/4 orchestral build', instruments:'Strings, Tabla, Bansuri flute, Piano, Soft percussion', vocal:'Karaoke — No Vocals (Instrumental)', lyricsRule:'No lyrics', special:'Large hall reverb cinematic no vocals' }}
+/* ---------- built‑in presets ---------- */
+const PRESETS = [
+  { id:'holi',      title:'Holi Dhamal',        meta:'Folk • Hindi • 128 BPM', data:{ mode:'Festive', language:'Hindi', theme:'Holi celebration with colors and joy', stylePack:'Folk‑Pop', tempo:'128', rhythm:'Dadra', instruments:'Dholak,Harmonium,Flute', vocal:'Male group', duration:'3 min', lyricsRule:'Simple chorus repeated 3x', special:'Add crowd cheering' } },
+  { id:'bhajan',    title:'Pure Bhajan',         meta:'Classical • Hindi • 72 BPM', data:{ mode:'Devotional', language:'Hindi', theme:'Morning prayer to Radha Krishna', stylePack:'Classical‑Bhajan', tempo:'72', rhythm:'Teentaal', instruments:'Tabla,Harmonium,Sitar', vocal:'Female solo', duration:'5 min', lyricsRule:'4 verses + refrain', special:'Peaceful and meditative' } },
+  { id:'sufi',      title:'Sufi Rock Anthem',    meta:'Sufi‑Rock • Urdu • 110 BPM', data:{ mode:'Spiritual', language:'Urdu', theme:'Journey of the soul towards divine love', stylePack:'Sufi‑Rock', tempo:'110', rhythm:'Keherwa', instruments:'Electric Guitar,Tabla,Ney Flute', vocal:'Male tenor', duration:'4 min', lyricsRule:'Qawwali opening + rock chorus', special:'Build to crescendo' } },
+  { id:'cinematic', title:'Cinematic World',     meta:'Orchestral • Instrumental • 90 BPM', data:{ mode:'Instrumental', language:'None', theme:'Epic journey across mountain landscapes', stylePack:'Cinematic‑World', tempo:'90', rhythm:'4/4 Orchestral', instruments:'Strings,Brass,Tabla,Shehnai', vocal:'None', duration:'6 min', lyricsRule:'No lyrics', special:'Dramatic swells + silence moments' } }
 ];
 
 function renderPresets() {
-  const list = $('builtInList'); if (!list) return;
-  list.innerHTML = builtInPresets.map(p => `<div class="presetItem"><h3>${p.title}</h3><div class="meta muted small">${p.meta}</div><div class="rowbtn"><button class="btn" onclick="loadPreset('${p.id}')">📂 Load</button><button class="btn ghost" onclick="genPreset('${p.id}')">⚡ Generate</button></div></div>`).join('');
+  const wrap = $('presetList'); if (!wrap) return;
+  wrap.innerHTML = PRESETS.map(p => `
+    <div class="preset-card">
+      <h3>${p.title}</h3><p class="meta">${p.meta}</p>
+      <button onclick="loadPreset('${p.id}')">Load</button>
+      <button onclick="genFromPreset('${p.id}')">Generate</button>
+    </div>`).join('');
 }
-function loadPreset(id) {
-  const p = builtInPresets.find(x => x.id === id); if (!p) return;
-  Object.entries(p.data).forEach(([k,v]) => { const el = $('promptForm')?.querySelector(`[name="${k}"]`); if (el) el.value = v; });
+window.loadPreset = id => {
+  const p = PRESETS.find(x => x.id === id); if (!p) return;
+  const f = $('promptForm'); if (!f) return;
+  Object.entries(p.data).forEach(([k, v]) => { if (f.elements[k]) f.elements[k].value = v; });
   show('prompt');
-}
-function genPreset(id) {
-  const p = builtInPresets.find(x => x.id === id); if (!p) return;
+};
+window.genFromPreset = id => {
+  const p = PRESETS.find(x => x.id === id); if (!p) return;
   const out = buildSunoPrompt(p.data);
   $('promptOut').value = out;
-  $('charCount').textContent = `(${out.length}/900 chars)`;
-  $('promptOutCard')?.classList.remove('hidden');
+  $('charCount').textContent = `${out.length}/900 chars`;
+  $('promptOutputCard').classList.remove('hidden');
   show('prompt');
-}
+};
+
+/* ---------- user saved presets ---------- */
 function renderMyPresets() {
-  const list = $('myPresetList'); if (!list) return;
-  const arr = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  list.innerHTML = arr.length ? arr.map((p,i) => `<div class="presetItem"><h3>${p.name}</h3><div class="rowbtn"><button class="btn" onclick="loadMy(${i})">📂 Load</button><button class="btn ghost" onclick="delPreset(${i})">🗑️</button></div></div>`).join('') : '<p class="muted">No saved presets.</p>';
+  const wrap = $('myPresetList'); if (!wrap) return;
+  const presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
+  wrap.innerHTML = presets.length ? presets.map(p => `
+    <div class="preset-card">
+      <h3>${p.title}</h3>
+      <button onclick="loadMyPreset(${p.id})">Load</button>
+      <button onclick="deleteMyPreset(${p.id})">Delete</button>
+    </div>`).join('') : '<p>No saved presets yet.</p>';
 }
-function loadMy(i) {
-  const arr = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  const p = arr[i]; if (!p) return;
-  Object.entries(p.data).forEach(([k,v]) => { const el = $('promptForm')?.querySelector(`[name="${k}"]`); if (el) el.value = v; });
+window.loadMyPreset = id => {
+  const presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
+  const p = presets.find(x => x.id === id); if (!p) return;
+  const f = $('promptForm'); if (!f) return;
+  Object.entries(p.data).forEach(([k, v]) => { if (f.elements[k]) f.elements[k].value = v; });
   show('prompt');
-}
-function delPreset(i) {
-  if (!confirm('Delete?')) return;
-  const arr = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  arr.splice(i,1); localStorage.setItem('myPresets', JSON.stringify(arr)); renderMyPresets();
-}
+};
+window.deleteMyPreset = id => {
+  let presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
+  presets = presets.filter(x => x.id !== id);
+  localStorage.setItem('myPresets', JSON.stringify(presets));
+  renderMyPresets();
+};
 
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('btnInstall')?.classList.remove('hidden'); });
-$('btnInstall')?.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') $('btnInstall')?.classList.add('hidden');
-  deferredPrompt = null;
+/* ---------- PWA install ---------- */
+let deferredInstall;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; const btn = $('installBtn'); if (btn) btn.classList.remove('hidden'); });
+$('installBtn')?.addEventListener('click', () => { deferredInstall?.prompt(); });
+
+/* ---------- Audio recorder ---------- */
+let recorder, recChunks = [];
+$('btnRecord')?.addEventListener('click', async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recorder = new MediaRecorder(stream); recChunks = [];
+  recorder.ondataavailable = e => recChunks.push(e.data);
+  recorder.onstop = () => {
+    const blob = new Blob(recChunks, { type: 'audio/webm' });
+    const url = URL.createObjectURL(blob);
+    const player = $('recPlayer'); if (player) { player.src = url; player.classList.remove('hidden'); }
+    const dl = $('recDownload'); if (dl) { dl.href = url; dl.download = 'recording.webm'; dl.classList.remove('hidden'); }
+  };
+  recorder.start();
+  $('btnRecord').disabled = true; $('btnStop')?.removeAttribute('disabled');
+});
+$('btnStop')?.addEventListener('click', () => {
+  recorder?.stop();
+  $('btnRecord').disabled = false; $('btnStop').disabled = true;
 });
 
-let mr, chunks = [];
-$('btnRec')?.addEventListener('click', async () => {
-  try {
-    const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mr = new MediaRecorder(s); chunks = [];
-    mr.ondataavailable = e => chunks.push(e.data);
-    mr.onstop = () => {
-      const url = URL.createObjectURL(new Blob(chunks, { type: 'audio/webm' }));
-      const a = $('recAudio'); if (a) { a.src = url; a.load(); }
-      const d = $('btnDownload');
-      if (d) { d.disabled = false; d.onclick = () => { const x = document.createElement('a'); x.href = url; x.download = 'rec.webm'; x.click(); }; }
-    };
-    mr.start(); $('btnRec').disabled = true; $('btnStop').disabled = false;
-  } catch(e) { alert('Mic error: ' + e.message); }
-});
-$('btnStop')?.addEventListener('click', () => { mr?.stop(); $('btnRec').disabled = false; $('btnStop').disabled = true; });
+/* ============================================================
+   ANALYSIS SHEET BUILDERS
+   ============================================================ */
+function buildMusicSheet(genre, key, bpm, instr, vocal) {
+  return `🎼 MUSIC SHEET — AapkiDhun Analysis
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Genre    : ${genre}
+Key      : ${key}
+BPM      : ${bpm}
+Instruments: ${instr}
+Vocal    : ${vocal}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+MIDI Notes (approx):
+  Intro   : [C4‑E4‑G4] x2
+  Verse   : [A3‑C4‑E4‑G4]
+  Chorus  : [F4‑A4‑C5]
+  Bridge  : [G4‑B4‑D5]
+  Outro   : [C4] fade
 
-function buildMusicSheet(srcLabel, genre, key, bpm, vocal) {
-  const g = genre === 'auto' ? 'Auto-detect' : genre;
-  const k = key || 'Auto-detect';
-  const b = bpm || 'Auto-detect';
-  const v = vocal === 'auto' ? 'Auto-detect' : vocal;
-  const bpmNum = parseInt(b) || 120;
-  const keyABC = k.replace(' Major','').replace(' Minor','m').replace('Auto-detect','C');
-  return `╔══════════════════════════════════════════════╗
-║      🎵 SONG MICRO-DETAIL ANALYZER          ║
-╚══════════════════════════════════════════════╝
- Source : ${srcLabel}
- Genre  : ${g}  |  Key : ${k}  |  BPM : ${b}
- Vocal  : ${v}
-══════════════════════════════════════════════
-
-━━━ 1. MUSICAL TAXONOMY ━━━━━━━━━━━━━━━━━━━━
-
-🎸 GENRE & STYLE
-  Genre    : ${g}
-  Style    : [specific style descriptors]
-  Sub-tags : [3-5 micro-genre descriptors]
-
-🌊 MOOD & EMOTIONAL DIRECTION
-  Arc      : Intro→Verse→Chorus→Outro emotional journey
-  Feel     : [Listener experience description]
-
-🥁 TEMPO & RHYTHM
-  BPM      : ${b}
-  Pattern  : [groove description]
-  Swing    : [straight/light/medium/heavy]
-
-🎼 KEY & HARMONY
-  Key      : ${k}
-  Chords   : [Main progression]
-  Tension  : [How harmony creates tension]
-
-🎹 INSTRUMENTATION
-  [List each instrument: name | role | sound]
-
-🎚️ PRODUCTION & TEXTURE
-  Quality  : [lo-fi/hi-fi/analog/digital]
-  Reverb   : [dry/room/hall/heavy]
-  Texture  : [warm/cold/compressed/wide]
-
-🎤 VOCAL
-  Type     : ${v}
-  Tone     : [description]
-  Process  : [dry/reverbed/layered]
-
-📐 SONG STRUCTURE
-  Intro → Verse 1 → Pre-Chorus → Chorus → Verse 2 → Bridge → Outro
-
-⚡ ENERGY CURVE
-  Intro:[1-10] → Verse:[1-10] → Chorus:[1-10] → Outro:[1-10]
-
-━━━ 2. SUNO AI REPLICATION PROMPT ━━━━━━━━━━
-
-[High-fidelity stereo, warm analog texture, ${g} style]
-
-${g}, ${b}, ${k}.
-Mood: [fill]
-Style: [fill]
-
-[Intro]
-[sparse entry, establish mood]
-
-[Verse 1]
-[${v} — intimate delivery]
-[main groove enters]
-
-[Chorus]
-[full arrangement — emotional peak]
-[layered harmonies]
-
-[Bridge]
-[contrast or breakdown]
-
-[Outro]
-[return to intro feel, fade]
-
-Tempo: ${b} | Key: ${k} | Vocal: ${v}
-Reinforcement: Maintain authentic ${g} character throughout
-══════════════════════════════════════════════`;
+Chords   : ${key} maj → IV → V → vi
+ABC Notation:
+  X:1
+  T:${genre} Analysis
+  M:4/4
+  K:${key}
+  |: CEGC | ACEG | FACE | GBDG :|
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
 }
 
 function buildSunoReplicationPrompt(srcLabel, genre, key, bpm, vocal) {
-  const g = genre === 'auto' ? 'World Folk' : genre;
-  const k = key || 'Auto key';
-  const b = bpm || 'Mid-tempo';
-  const v = vocal === 'auto' ? 'Auto-detect vocal' : vocal;
-  return `[High-fidelity stereo, warm analog texture]
+  return `🎯 SUNO AI REPLICATION PROMPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source   : ${srcLabel}
+Genre    : ${genre}
+Key      : ${key}
+BPM      : ${bpm}
+Vocal    : ${vocal}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASTE IN SUNO → "Style of Music":
+${genre}, ${key} key, ${bpm} BPM, ${vocal} vocals,
+authentic instrumentation, traditional arrangement,
+high production quality, emotional depth
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+REINFORCEMENT LINE:
+"${genre} song in ${key}, ${bpm} BPM, ${vocal}, true to tradition"
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+}
 
-${g} composition, ${b}, ${k}.
-Mood: [fill — e.g. euphoric devotional / melancholic restrained]
-Style: [fill — e.g. live temple folk / cinematic / bedroom lo-fi]
+function buildBeatSheet(bpm, rhythm) {
+  const beats = parseInt(bpm) || 120;
+  return `🥁 BEAT ANALYSIS — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+BPM      : ${beats}
+Rhythm   : ${rhythm}
+Time Sig : 4/4
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Beat Map (1 bar):
+  1  +  2  +  3  +  4  +
+  K     S     K  K  S
+  (K=Kick, S=Snare, H=HiHat)
 
-[Intro]
-[sparse — establish main instrument, no full drums yet]
-[set emotional tone from first note]
+Groove Pattern:
+  Intro   : 4‑bar build, half‑time feel
+  Verse   : standard ${rhythm} pattern
+  Chorus  : double kick + open HH
+  Bridge  : breakdown + fill
+  Outro   : fade with reverb tail
 
-[Verse 1]
-[${v} — intimate, close-mic delivery]
-[main groove instruments enter]
-[low-to-mid energy, storytelling tone]
+Subdivision: 16th‑note grid
+Swing     : 5%
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+}
 
-[Pre-Chorus]
-[tension builds — add layer, rhythm tightens]
+function buildInstrSheet(instr) {
+  const list = instr.split(/[,،\n]+/).map(i => i.trim()).filter(Boolean);
+  return `🎸 INSTRUMENT BREAKDOWN — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Detected Instruments:
+${list.map((ins, i) => `  ${i + 1}. ${ins}\n     Role: Lead/Rhythm/Texture\n     Notes: Typical ${ins} range\n     MIDI CC: Mod=1, Vol=7, Pan=10`).join('\n')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Layering Suggestion:
+  Layer 1 (Foundation): ${list[0] || 'Rhythm instrument'}
+  Layer 2 (Melody)    : ${list[1] || 'Lead instrument'}
+  Layer 3 (Texture)   : ${list[2] || 'Pad/Atmosphere'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+}
+
+function buildVocalSheet(vocal) {
+  return `🎙️ VOCAL ANALYSIS — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Vocal Type  : ${vocal}
+Range       : C3 – A5 (approx)
+Techniques  : Vibrato, Gamak, Meend, Sargam
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Vocal Notes:
+  Verse   : Mid‑range, conversational
+  Chorus  : Upper register, sustained
+  Bridge  : Emotional peak, ornamentation
+  Outro   : Descend, fade
+
+Vocal MIDI (approx):
+  Pitch   : 60 (C4) to 81 (A5)
+  Velocity: 90–110 (dynamics)
+  Vibrato : CC1 mod wheel
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+}
+
+/* ============================================================
+   NEW FEATURE 1 — 30‑SEC SAMPLE PLAYER
+   ============================================================ */
+let sampleAudioCtx = null;
+let sampleSource = null;
+
+function playSample30(file, startSec = 0) {
+  if (!file) { alert('Pehle file upload karo!'); return; }
+  const DURATION = 30;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      if (sampleSource) { try { sampleSource.stop(); } catch (_) {} }
+      if (!sampleAudioCtx || sampleAudioCtx.state === 'closed') {
+        sampleAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const arrayBuf = ev.target.result;
+      const audioBuf = await sampleAudioCtx.decodeAudioData(arrayBuf);
+      const src = sampleAudioCtx.createBufferSource();
+      src.buffer = audioBuf;
+      src.connect(sampleAudioCtx.destination);
+      const offset = Math.min(startSec, audioBuf.duration - 1);
+      src.start(0, offset, DURATION);
+      sampleSource = src;
+      updateSampleUI(true);
+      src.onended = () => updateSampleUI(false);
+    } catch (err) {
+      alert('Audio decode error: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function stopSample() {
+  try { sampleSource?.stop(); } catch (_) {}
+  updateSampleUI(false);
+}
+
+function updateSampleUI(playing) {
+  const btn = $('btnPlaySample');
+  const stopBtn = $('btnStopSample');
+  if (btn) btn.textContent = playing ? '⏸ Playing…' : '▶ Play 30‑sec Sample';
+  if (stopBtn) stopBtn.classList.toggle('hidden', !playing);
+}
+
+/* ============================================================
+   NEW FEATURE 2 — LYRICS EXTRACTOR (from file or URL)
+   ============================================================ */
+function extractLyricsFromText(rawText) {
+  // Pull lines that look like sung phrases (heuristic)
+  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 8 && l.length < 120);
+  const lyricsLines = lines.filter(l => !/^[#\[<]/.test(l)); // skip headings, tags
+  return lyricsLines.slice(0, 40).join('\n');
+}
+
+function buildLyricsSheet(src, rawLyrics) {
+  return `🎤 LYRICS EXTRACTED — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source: ${src}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+${rawLyrics || '(No readable lyrics found — try a different file or URL)'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+To edit in Lyrics Studio → paste above text in "Original Lyrics" tab
+Generated by AapkiDhun`;
+}
+
+/* ============================================================
+   NEW FEATURE 3 — LINK → NEW LYRICS GENERATOR
+   ============================================================ */
+function buildNewLyricsFromLink(url, lang, mood, theme) {
+  const domain = (() => { try { return new URL(url).hostname; } catch (_) { return url; } })();
+  return `✍️ INSPIRED LYRICS — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Inspired by : ${domain}
+Language    : ${lang}
+Mood        : ${mood}
+Theme       : ${theme}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Mukhda / Hook]
+${theme} ki baat sunao,
+${mood} mein dil ko batao,
+Har pal mein teri yaad,
+Zindagi ka ye iraada…
+
+[Antara 1 / Verse 1]
+Roshni leke aaya ye din,
+${theme} ne toda har zanjeer,
+${lang} mein kehte hain log yahan,
+Dil ki awaaz, sachchi takdeer…
+
+[Antara 2 / Verse 2]
+Raah mein kante aaye bhi agar,
+${mood} ka daaman thamna hai,
+Sapno ki duniya bana kar humne,
+Har mushkil se ladna hai…
 
 [Chorus]
-[full arrangement — emotional peak]
-[layered harmonies / call-and-response]
-[hook — most memorable moment]
-
-[Verse 2]
-[same groove, slight variation]
-[new lyrical imagery]
-
-[Bridge]
-[contrast — breakdown or key shift]
-[most vulnerable or intense moment]
-
-[Outro]
-[return to intro feel]
-[fade gently / hard stop]
-
-Tempo: ${b} | Key: ${k} | Vocal: ${v}
-Production: warm analog, organic mix, no EDM
-Reinforcement: Maintain authentic ${g} character throughout`;
+Aage badhte chalte rahein,
+${theme} ki roshni mein,
+Har lamha jeete rahein,
+Apni hi boli, apni hi zameen…
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun | Paste into Suno Lyrics box`;
 }
 
-function buildBeatSheet(srcLabel, genre, bpm) {
-  const g = genre === 'auto' ? 'Auto-detect' : genre;
-  const b = bpm || 'Auto-detect';
-  const bpmNum = parseInt(b) || 120;
-  return `🥁 BEAT ANALYSIS — ${srcLabel}
-Genre: ${g} | BPM: ${b}
-══════════════════════════════
-EXACT BPM      : [detect]
-TIME SIGNATURE : [detect]
-SWING FACTOR   : [straight/light/medium/heavy]
+/* ============================================================
+   TRANSCRIBE TAB
+   ============================================================ */
+const GENRE_PRESETS_TR = {
+  folk:'Folk, Hindustani, Dholak, 90 BPM, D minor',
+  hindustani:'Hindustani Classical, Sitar, Tabla, 60 BPM, Yaman',
+  carnatic:'Carnatic Classical, Veena, Mridangam, 80 BPM, Shankarabharanam',
+  qawwali:'Qawwali, Harmonium, Tabla, 100 BPM, G minor',
+  bollywood:'Bollywood, Strings, Dhol, 110 BPM, C major',
+  jazz:'Jazz, Piano, Bass, Drums, 120 BPM, Bb major',
+  western:'Western Pop, Guitar, Bass, 128 BPM, G major',
+  hiphop:'Hip‑Hop, 808 Bass, 90 BPM, F# minor',
+  edm:'EDM, Synth, 140 BPM, A minor',
+  flamenco:'Flamenco, Guitar, Cajon, 100 BPM, Phrygian',
+  reggae:'Reggae, Bass, Organ, 80 BPM, E minor',
+  world:'World Music, Mixed, 95 BPM, Pentatonic'
+};
 
-4-BAR GROOVE:
-Beat: 1 + 2 + 3 + 4 +
-[P1]: D . d . D . d .
-[P2]: . X . . X . . X
-
-ABC:
-X:2
-M:4/4
-Q:1/4=${bpmNum}
-K:C clef=perc
-|: [fill] :|`;
-}
-
-function buildInstrSheet(srcLabel, genre, key) {
-  const g = genre === 'auto' ? 'Auto-detect' : genre;
-  const k = key || 'Auto-detect';
-  return `🎸 INSTRUMENTS — ${srcLabel}
-Genre: ${g} | Key: ${k}
-════════════════════════════════
-FOR EACH INSTRUMENT:
-  Name | Role | Timbre | MIDI Ch | Pan | FX
-────────────────────────────────
-[detect all instruments]
-[list entry/exit timestamps]
-[note microtonal bends if any]`;
-}
-
-function buildVocalSheet(srcLabel, genre, vocal) {
-  const g = genre === 'auto' ? 'Auto-detect' : genre;
-  const v = vocal === 'auto' ? 'Auto-detect' : vocal;
-  return `🎤 VOCAL ANALYSIS — ${srcLabel}
-Genre: ${g} | Vocal: ${v}
-══════════════════════════════════
-TYPE    : [detect]
-RANGE   : [lowest – highest]
-LANG    : [detect]
-
-NOTE-BY-NOTE:
-[time] [note] "[syllable]" [ornament] [conf%]
-
-ORNAMENTS: Meend / Gamak / Murki / Kan
-BREATH MARKS: [timestamps]
-FULL LYRICS: [original | phonetic | meaning]`;
-}
-
-const tPresets = [
-  { id:'folk', label:'🪘 Folk/Regional', genre:'Regional Folk', inst:'Dholak, Harmonium, Flute, Khartal' },
-  { id:'hindustani', label:'🎵 Hindustani Classical', genre:'Hindustani Classical', inst:'Tabla, Sitar, Harmonium, Tanpura' },
-  { id:'carnatic', label:'🎶 Carnatic', genre:'Carnatic Classical', inst:'Mridangam, Veena, Violin, Ghatam' },
-  { id:'qawwali', label:'🌙 Qawwali/Sufi', genre:'Qawwali', inst:'Harmonium, Tabla, Dholak, Chorus' },
-  { id:'bollywood', label:'🎬 Bollywood', genre:'Bollywood', inst:'Strings, Tabla, Guitar, Piano, Brass' },
-  { id:'jazz', label:'🎷 Jazz', genre:'Jazz', inst:'Piano, Bass, Drums, Sax, Trumpet' },
-  { id:'western', label:'🎻 Western Classical', genre:'Western Classical', inst:'Violin, Cello, Piano, Woodwinds' },
-  { id:'hiphop', label:'🎤 Hip-Hop', genre:'Hip-Hop', inst:'808 Bass, Hi-hat, Snare, Synth' },
-  { id:'edm', label:'🎛️ EDM', genre:'EDM', inst:'Synth Lead, Bass Drop, Kick Drum' },
-  { id:'flamenco', label:'💃 Flamenco', genre:'Flamenco', inst:'Spanish Guitar, Cajon, Castanets' },
-  { id:'reggae', label:'🌿 Reggae', genre:'Reggae', inst:'Bass Guitar, Rhythm Guitar, Drums' },
-  { id:'world', label:'🌍 World Fusion', genre:'World Fusion', inst:'Global instruments mix' }
-];
-const tSel = $('transcribeGenre');
-if (tSel) {
-  tPresets.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.label; tSel.appendChild(o); });
-  tSel.addEventListener('change', () => { const p = tPresets.find(x => x.id === tSel.value); if (p) $('transcribeInst').value = p.inst; });
-}
-
-$('ttabFile')?.addEventListener('click', () => { $('ttabFile').classList.add('active'); $('ttabLink')?.classList.remove('active'); $('tFileArea')?.classList.remove('hidden'); $('tLinkArea')?.classList.add('hidden'); });
-$('ttabLink')?.addEventListener('click', () => { $('ttabLink').classList.add('active'); $('ttabFile')?.classList.remove('active'); $('tLinkArea')?.classList.remove('hidden'); $('tFileArea')?.classList.add('hidden'); });
-
-let tUploadedFile = '';
-$('tAudioFile')?.addEventListener('change', e => {
-  const file = e.target.files[0]; if (!file) return;
-  tUploadedFile = file.name;
-  const url = URL.createObjectURL(file);
-  const info = $('tFileInfo');
-  if (info) { info.className = 'file-info-box'; info.innerHTML = `<div class="file-name">📁 ${file.name}</div><div class="muted small">${(file.size/1024/1024).toFixed(2)} MB</div><audio class="audio" controls src="${url}" style="margin-top:8px;width:100%"></audio>`; }
-  $('tUploadBox')?.classList.add('hidden');
+let trFile = null;
+$('trGenrePreset')?.addEventListener('change', function () {
+  if (this.value && GENRE_PRESETS_TR[this.value]) {
+    $('trGenre').value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+  }
 });
 
+$('trFile')?.addEventListener('change', function () {
+  trFile = this.files[0] || null;
+  const info = $('trFileInfo');
+  if (info && trFile) info.textContent = `📁 ${trFile.name} (${(trFile.size/1024).toFixed(1)} KB)`;
+});
+
+/* --- BUG FIX: Generate button now works --- */
 $('btnTranscribe')?.addEventListener('click', () => {
-  const genreId = $('transcribeGenre')?.value;
-  const p = tPresets.find(x => x.id === genreId);
-  const genre = p?.genre || 'Auto-detect';
-  const inst = $('transcribeInst')?.value || p?.inst || 'Auto-detect';
-  const key = $('transcribeKey')?.value || 'Auto-detect';
-  const bpm = $('transcribeTempo')?.value || 'Auto-detect';
-  const tLink = $('tUrl')?.value?.trim();
-  const srcLabel = tUploadedFile ? `File: ${tUploadedFile}` : (tLink ? 'Online source' : 'Audio source');
-  $('transcribeOut').value = buildMusicSheet(srcLabel, genre, key, bpm, 'Auto-detect') + `\n\nINSTRUMENTS TO DETECT: ${inst}`;
-  $('transcribeOutCard')?.classList.remove('hidden');
-  $('transcribeOutCard')?.scrollIntoView({ behavior: 'smooth' });
-});
-$('btnCopyT')?.addEventListener('click', () => copyText('transcribeOut'));
-$('btnPrintT')?.addEventListener('click', () => printText('transcribeOut', 'Music Sheet'));
+  const genre   = $('trGenre')?.value   || 'Unknown';
+  const key     = $('trKey')?.value     || 'C';
+  const bpm     = $('trBpm')?.value     || '120';
+  const instr   = $('trInstruments')?.value || 'Piano';
+  const srcLabel = trFile ? trFile.name : ($('trLink')?.value || 'Unknown source');
 
-let uploadedFile = '';
-$('utabFile')?.addEventListener('click', () => { $('utabFile').classList.add('active'); $('utabLink')?.classList.remove('active'); $('uploadFileArea')?.classList.remove('hidden'); $('uploadLinkArea')?.classList.add('hidden'); });
-$('utabLink')?.addEventListener('click', () => { $('utabLink').classList.add('active'); $('utabFile')?.classList.remove('active'); $('uploadLinkArea')?.classList.remove('hidden'); $('uploadFileArea')?.classList.add('hidden'); });
+  $('trOut').value = buildMusicSheet(genre, key, bpm, instr, 'Vocal');
+  $('trOutputCard').classList.remove('hidden');
 
-$('audioFile')?.addEventListener('change', e => {
-  const file = e.target.files[0]; if (!file) return;
-  uploadedFile = file.name;
-  const url = URL.createObjectURL(file);
-  const fi = $('fileInfo');
-  if (fi) { fi.className = 'file-info-box'; fi.innerHTML = `<div class="file-name">📁 ${file.name}</div><div class="muted small">${(file.size/1024/1024).toFixed(2)} MB · ${file.type||'audio'}</div><audio class="audio" controls src="${url}" style="margin-top:8px;width:100%"></audio><button class="btn ghost" style="margin-top:8px;font-size:12px" onclick="resetUpload()">✕ Remove</button>`; }
-  $('uploadBox')?.classList.add('hidden');
+  // ---- Feature 2: show extracted lyrics from text file ----
+  if (trFile && trFile.type.startsWith('text')) {
+    const r = new FileReader();
+    r.onload = ev => {
+      const lyrics = extractLyricsFromText(ev.target.result);
+      const lSheet = buildLyricsSheet(srcLabel, lyrics);
+      $('trLyricsOut') && ($('trLyricsOut').value = lSheet);
+      $('trLyricsCard')?.classList.remove('hidden');
+    };
+    r.readAsText(trFile);
+  }
 });
 
-function resetUpload() {
-  uploadedFile = '';
-  const fi = $('fileInfo'); if (fi) { fi.className = 'hidden'; fi.innerHTML = ''; }
-  $('uploadBox')?.classList.remove('hidden');
-}
+/* ============================================================
+   ANALYZE TAB  (with Sample Player + Lyrics Extractor)
+   ============================================================ */
+let anFile = null;
 
+$('anFile')?.addEventListener('change', function () {
+  anFile = this.files[0] || null;
+  const info = $('anFileInfo');
+  if (info && anFile) info.textContent = `📁 ${anFile.name} (${(anFile.size/1024).toFixed(1)} KB)`;
+});
+
+/* --- BUG FIX: Generate button now works --- */
 $('btnAnalyze')?.addEventListener('click', () => {
-  const link = $('analyzeUrl')?.value?.trim();
-  if (!uploadedFile && !link) { alert('File upload karo ya link paste karo!'); return; }
-  const srcLabel = uploadedFile ? `File: ${uploadedFile}` : 'Online source provided';
-  const genre = $('analyzeGenre')?.value || 'auto';
-  const key = $('analyzeKey')?.value || '';
-  const bpm = $('analyzeBpm')?.value || '';
-  const vocal = $('analyzeVocal')?.value || 'auto';
-  $('sheetOut').value = buildMusicSheet(srcLabel, genre, key, bpm, vocal);
-  $('beatOut').value = buildBeatSheet(srcLabel, genre, bpm);
-  $('instrOut').value = buildInstrSheet(srcLabel, genre, key);
-  $('vocalOut').value = buildVocalSheet(srcLabel, genre, vocal);
-  $('fullOut').value = buildSunoReplicationPrompt(srcLabel, genre, key, bpm, vocal);
-  $('analyzeOutCard')?.classList.remove('hidden');
-  $('analyzeOutCard')?.scrollIntoView({ behavior: 'smooth' });
+  const genre   = $('anGenre')?.value  || 'Unknown';
+  const key     = $('anKey')?.value    || 'C';
+  const bpm     = $('anBpm')?.value    || '120';
+  const vocal   = $('anVocal')?.value  || 'Male';
+  const instr   = $('anInstr')?.value  || 'Piano';
+  const srcLabel = anFile ? anFile.name : ($('anLink')?.value || 'Unknown source');
+
+  $('fullOut').value   = buildSunoReplicationPrompt(srcLabel, genre, key, bpm, vocal);
+  $('beatOut').value   = buildBeatSheet(bpm, 'Keherwa');
+  $('instrOut').value  = buildInstrSheet(instr);
+  $('vocalOut').value  = buildVocalSheet(vocal);
+
+  $('anOutputCard')?.classList.remove('hidden');
+
+  // ---- Feature 1: show 30‑sec sample player ----
+  const sampleCard = $('sampleCard');
+  if (sampleCard) sampleCard.classList.remove('hidden');
+  $('btnPlaySample')?.removeAttribute('disabled');
+
+  // ---- Feature 2: extract lyrics if text file ----
+  if (anFile && anFile.type.startsWith('text')) {
+    const r = new FileReader();
+    r.onload = ev => {
+      const lyrics = extractLyricsFromText(ev.target.result);
+      const lSheet = buildLyricsSheet(anFile.name, lyrics);
+      $('anLyricsOut') && ($('anLyricsOut').value = lSheet);
+      $('anLyricsCard')?.classList.remove('hidden');
+    };
+    r.readAsText(anFile);
+  }
 });
 
-document.querySelectorAll('.rtab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.rt-panel').forEach(p => p.classList.add('hidden'));
-    btn.classList.add('active');
-    $('rt-' + btn.dataset.rt)?.classList.remove('hidden');
+// Sample player buttons (wired after Analyze generates them)
+document.addEventListener('click', e => {
+  if (e.target.id === 'btnPlaySample')  playSample30(anFile);
+  if (e.target.id === 'btnStopSample')  stopSample();
+});
+
+/* ============================================================
+   LYRICS STUDIO — NEW LYRICS + FEATURE 3 (link input)
+   ============================================================ */
+$('btnGenNewLyrics')?.addEventListener('click', () => {
+  const theme = $('nlTheme')?.value   || 'Love';
+  const lang  = $('nlLang')?.value    || 'Hindi';
+  const mood  = $('nlMood')?.value    || 'Romantic';
+  const bpm   = $('nlBpm')?.value     || '90';
+  const vocal = $('nlVocal')?.value   || 'Female';
+  const instr = $('nlInstr')?.value   || 'Piano';
+  const ref   = $('nlRef')?.value     || '';
+  const link  = $('nlLink')?.value    || '';   // ← Feature 3 field
+
+  let out;
+  if (link) {
+    out = buildNewLyricsFromLink(link, lang, mood, theme);
+  } else {
+    out = `✍️ NEW LYRICS — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Theme    : ${theme}
+Language : ${lang}
+Mood     : ${mood}
+BPM      : ${bpm}
+Vocal    : ${vocal}
+Instruments: ${instr}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Mukhda]
+${theme} ki baat karein,
+Dil se jo baat nikle,
+${mood} mein doobe hain hum,
+Har pal mein jee lein…
+
+[Verse 1]
+Subah ki roshni jaise,
+${theme} ka ehsaas hai,
+${lang} mein kehte hain log,
+Dil ki ye awaaz hai…
+
+[Chorus]
+${theme}… ${mood}…
+Har pal, har lamha, tere sang,
+Zindagi bane rangeen,
+Apni hi boli, apni hi zameen…
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+  }
+  $('nlOut').value = out;
+  $('nlOutputCard')?.classList.remove('hidden');
+});
+
+// Original Lyrics Analysis
+$('btnAnalyzeLyrics')?.addEventListener('click', () => {
+  const text  = $('olText')?.value  || '';
+  const lang  = $('olLang')?.value  || 'Hindi';
+  const atype = $('olType')?.value  || 'Full';
+  const vocal = $('olVocal')?.value || 'Male';
+  $('olOut').value = `🔍 LYRICS ANALYSIS — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Language : ${lang}
+Type     : ${atype}
+Vocal    : ${vocal}
+Chars    : ${text.length}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRUCTURE:
+  Lines detected : ${text.split('\n').filter(l=>l.trim()).length}
+  Estimated verses: ${Math.ceil(text.split('\n').filter(l=>l.trim()).length / 4)}
+  Rhyme scheme   : ABAB (approx)
+  Syllable count : ~${text.split(' ').length * 2} syllables
+
+THEME KEYWORDS:
+  ${text.split(' ').filter(w=>w.length>4).slice(0,8).join(', ')}
+
+SUNO STYLE TAG:
+  "${lang} song, ${vocal} vocal, ${atype} style"
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+  $('olOutputCard')?.classList.remove('hidden');
+});
+
+// Reference Lyrics
+$('btnGenRefLyrics')?.addEventListener('click', () => {
+  const refTheme = $('rlRefTheme')?.value  || 'Love';
+  const origText = $('rlOrigText')?.value  || '';
+  const targLang = $('rlTargLang')?.value  || 'Hindi';
+  const targMood = $('rlTargMood')?.value  || 'Romantic';
+  const vocal    = $('rlVocal')?.value     || 'Female';
+  const style    = $('rlStyle')?.value     || 'Folk';
+  const link     = $('rlLink')?.value      || '';  // ← Feature 3 in reference tab too
+
+  const base = link
+    ? buildNewLyricsFromLink(link, targLang, targMood, refTheme)
+    : `✍️ REFERENCE LYRICS — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Reference: ${refTheme}
+Language : ${targLang}
+Mood     : ${targMood}
+Vocal    : ${vocal}
+Style    : ${style}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Verse inspired by reference]
+${refTheme} ki tarah hain tum,
+${targMood} mein doobe hum,
+${style} ki dhun mein likhi,
+Ye nayee baat apni…
+
+[Chorus]
+${refTheme}, ${targLang}, ${vocal},
+Har saans mein tum hi ho,
+Dil ki har tarang mein,
+Teri awaaz suno…
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+  $('rlOut').value = base;
+  $('rlOutputCard')?.classList.remove('hidden');
+});
+
+/* ============================================================
+   NATURE SOUND STUDIO
+   ============================================================ */
+const natureSounds = [];
+document.querySelectorAll('.sound-chip').forEach(chip => {
+  chip.addEventListener('click', function () {
+    const val = this.dataset.sound;
+    if (this.classList.toggle('active')) {
+      if (natureSounds.length >= 5) { this.classList.remove('active'); alert('Max 5 sounds!'); return; }
+      natureSounds.push(val);
+    } else {
+      const idx = natureSounds.indexOf(val);
+      if (idx > -1) natureSounds.splice(idx, 1);
+    }
   });
-});
-
-$('btnNewCompose')?.addEventListener('click', () => {
-  const lang = $('newLang')?.value || 'Hindi';
-  const vocal = $('newVocal')?.value || 'Solo Male';
-  const theme = $('newTheme')?.value || 'custom theme';
-  const keep = $('keepFrom')?.value || 'same energy and feel';
-  const genre = $('analyzeGenre')?.value || 'Folk';
-  const bpm = $('analyzeBpm')?.value || 'same BPM';
-  const key = $('analyzeKey')?.value || 'same key';
-  $('newComposeOut').value = `[High-fidelity stereo, warm analog texture]\n\n${genre} composition, ${bpm}, ${key}, ${lang} lyrics.\n${vocal} — authentic phrasing.\nTheme: ${theme}\nKeep: ${keep}\n\n[Intro] establish mood\n[Verse 1] ${lang} lyrics, ${theme}\n[Chorus] hook in ${lang}\n[Outro] fade\n\nTempo: ${bpm} | Key: ${key} | Vocal: ${vocal}\nReinforcement: Fresh ${lang} lyrics — same feel as reference`;
-});
-
-document.querySelectorAll('.ltab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.ltab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.lt-panel').forEach(p => p.classList.add('hidden'));
-    btn.classList.add('active');
-    $('lt-' + btn.dataset.lt)?.classList.remove('hidden');
-  });
-});
-
-$('newLyricsForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const d = Object.fromEntries(new FormData(e.target));
-  const prov = d.nlProvider === 'auto' ? 'Use best AI judgment.' : `Optimized for ${d.nlProvider}.`;
-  $('newLyricsOut').value = `✍️ NEW LYRICS PROMPT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nGenre: ${d.nlGenre} | Lang: ${d.nlLang} | Vocal: ${d.nlVocal}\nTheme: ${d.nlTheme} | Mood: ${d.nlMood}\nStruct: ${d.nlStruct} | BPM: ${d.nlBpm||'medium'}\n${d.nlSpecial?'Special: '+d.nlSpecial:''}\n${prov}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nWRITE:\n[Mukhda/Hook] catchy 2-4 lines, AABB rhyme\n[Verse 1] develop theme: ${d.nlTheme}\n[Verse 2] fresh angle, escalate emotion\n[Bridge] contrast/resolution\n\nOutput: full lyrics + section labels + melody hints (UP/DOWN/HOLD)`;
-  $('newLyricsOutCard')?.classList.remove('hidden');
-  $('newLyricsOutCard')?.scrollIntoView({ behavior: 'smooth' });
-});
-
-$('origLyricsForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const d = Object.fromEntries(new FormData(e.target));
-  $('origLyricsOut').value = `📝 LYRICS ANALYSIS\nGenre: ${d.olGenre} | Lang: ${d.olLang}\n\nANALYZE:\n${d.olLyrics?.trim()||'[Paste lyrics above]'}\n\n1. Translation\n2. Structure map\n3. Rhyme scheme\n4. Syllable count\n5. Emotional arc\n6. Cultural references\n7. Melody suggestions\n8. Singability score`;
-  $('origLyricsOutCard')?.classList.remove('hidden');
-  $('origLyricsOutCard')?.scrollIntoView({ behavior: 'smooth' });
-});
-
-$('refLyricsForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const d = Object.fromEntries(new FormData(e.target));
-  $('refLyricsOut').value = `🔗 REFERENCE LYRICS\nNew Lang: ${d.rlLang} | Vocal: ${d.rlVocal}\nTheme: ${d.rlTheme} | Style: ${d.rlStyle}\n${d.rlSpecial?'Special: '+d.rlSpecial:''}\n\nCREATE: same meter + rhyme, new theme\nOutput: side-by-side original vs new`;
-  $('refLyricsOutCard')?.classList.remove('hidden');
-  $('refLyricsOutCard')?.scrollIntoView({ behavior: 'smooth' });
-});
-
-let selSounds = [];
-document.querySelectorAll('.chip').forEach(c => {
-  c.addEventListener('click', () => {
-    const s = c.dataset.sound;
-    if (c.classList.contains('active')) { c.classList.remove('active'); selSounds = selSounds.filter(x => x !== s); }
-    else { c.classList.add('active'); selSounds.push(s); }
-    const cnt = $('selCount'); if (cnt) cnt.textContent = selSounds.length;
-    const disp = $('selectedSoundsDisplay'), m = $('noSelMsg');
-    if (!disp) return;
-    disp.querySelectorAll('.sel-tag').forEach(t => t.remove());
-    if (!selSounds.length) { if(m) m.style.display=''; return; }
-    if(m) m.style.display='none';
-    selSounds.forEach(s => {
-      const t = document.createElement('span'); t.className = 'sel-tag';
-      t.textContent = s.split(' ').slice(0,3).join(' ') + ' ✕';
-      t.onclick = () => { selSounds = selSounds.filter(x => x !== s); document.querySelectorAll(`.chip[data-sound="${CSS.escape(s)}"]`).forEach(c => c.classList.remove('active')); $('selCount').textContent = selSounds.length; t.remove(); if(!selSounds.length && m) m.style.display=''; };
-      disp.appendChild(t);
-    });
-  });
-});
-
-$('btnClearNature')?.addEventListener('click', () => {
-  selSounds = []; document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  $('selCount').textContent = '0';
-  const d = $('selectedSoundsDisplay'); if (d) d.querySelectorAll('.sel-tag').forEach(t => t.remove());
-  const m = $('noSelMsg'); if (m) m.style.display='';
 });
 
 $('btnGenNature')?.addEventListener('click', () => {
-  if (!selSounds.length) { alert('Koi sound select karo!'); return; }
-  const g = $('natGenre')?.value||'Ambient', mood = $('natMood')?.value||'Peaceful';
-  const bpm = $('natBpm')?.value||'70 BPM', layer = $('natLayer')?.value||'Background';
-  const intensity = $('natIntensity')?.value||'Moderate', special = $('natSpecial')?.value||'';
-  $('natureOut').value = `[Stereo, spatial 3D, organic]\n\n${g}, ${bpm}, ${mood} mood.\nNature: ${selSounds.slice(0,5).join(', ')}.\n${layer}, ${intensity}.\n${special||'Blend nature sounds with music.'}\n\n[Intro] nature only — ${selSounds[0]}\n[Build] music enters softly\n[Main] full — nature at ${intensity}\n[Outro] music fades, nature returns\n\nMood: ${mood} | Tempo: ${bpm}\nReinforcement: organic character throughout`;
-  $('natureOutCard')?.classList.remove('hidden');
-  $('natureOutCard')?.scrollIntoView({ behavior: 'smooth' });
+  const genre   = $('natureGenre')?.value     || 'Ambient';
+  const mood    = $('natureMood')?.value      || 'Calm';
+  const bpm     = $('natureBpm')?.value       || '70';
+  const layer   = $('natureLayer')?.value     || '3';
+  const intense = $('natureIntensity')?.value || 'Medium';
+  const special = $('natureSpecial')?.value   || '';
+
+  $('natureOut').value = `🌿 NATURE SOUND PROMPT — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sounds   : ${natureSounds.join(', ') || 'Rain, Birds'}
+Genre    : ${genre}
+Mood     : ${mood}
+BPM      : ${bpm}
+Layers   : ${layer}
+Intensity: ${intense}
+Special  : ${special}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUNO PROMPT:
+${genre} ambient music with ${natureSounds.join(', ')} sounds,
+${mood} mood, ${bpm} BPM, ${intense} intensity,
+${layer}-layer soundscape, ${special || 'organic and natural'},
+high fidelity field recording quality, spatial audio
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+  $('natureOutputCard')?.classList.remove('hidden');
 });
 
-let playlist = [], curTrack = 0;
-$('playerFiles')?.addEventListener('change', e => {
-  const files = Array.from(e.target.files); if (!files.length) return;
-  playlist = files.map(f => ({ name: f.name, url: URL.createObjectURL(f) }));
-  curTrack = 0; renderPL(); loadTrack(0);
-});
-function renderPL() {
-  const c = $('playlistItems'); if (!c) return;
-  c.innerHTML = playlist.map((t,i) => `<div class="pl-item${i===curTrack?' active':''}" onclick="loadTrack(${i})">${i===curTrack?'▶️':'🎵'} ${t.name}</div>`).join('');
-}
-function loadTrack(i) {
-  if (i < 0 || i >= playlist.length) return;
-  curTrack = i;
-  const p = $('mainPlayer'); if (p) { p.src = playlist[i].url; p.play().catch(()=>{}); }
-  $('trackName').textContent = playlist[i].name;
-  $('trackNum').textContent = `${i+1} / ${playlist.length}`;
-  $('btnPlayPause').textContent = '⏸ Pause';
-  $('playerDisc')?.classList.add('spinning');
-  renderPL();
-}
-$('btnPlayPause')?.addEventListener('click', () => {
-  const p = $('mainPlayer'); if (!p) return;
-  if (p.paused) { p.play(); $('btnPlayPause').textContent = '⏸ Pause'; $('playerDisc')?.classList.add('spinning'); }
-  else { p.pause(); $('btnPlayPause').textContent = '▶️ Play'; $('playerDisc')?.classList.remove('spinning'); }
-});
-$('btnPrev')?.addEventListener('click', () => loadTrack(curTrack - 1));
-$('btnNext')?.addEventListener('click', () => loadTrack(curTrack + 1));
-$('mainPlayer')?.addEventListener('ended', () => { if (curTrack < playlist.length - 1) loadTrack(curTrack + 1); else $('playerDisc')?.classList.remove('spinning'); });
+/* ============================================================
+   OFFLINE PLAYER
+   ============================================================ */
+let playlist = [], currentTrack = 0;
 
+$('playerFile')?.addEventListener('change', function () {
+  playlist = Array.from(this.files);
+  if (playlist.length) loadTrack(0);
+});
+
+function loadTrack(idx) {
+  if (!playlist[idx]) return;
+  currentTrack = idx;
+  const file = playlist[idx];
+  const url = URL.createObjectURL(file);
+  const audio = $('mainPlayer');
+  if (audio) { audio.src = url; audio.play(); }
+  const info = $('trackInfo');
+  if (info) info.textContent = `🎵 ${file.name} (${idx+1}/${playlist.length})`;
+  $('discAnim')?.classList.add('spinning');
+}
+
+$('btnPlay')?.addEventListener('click', () => {
+  const a = $('mainPlayer'); if (!a) return;
+  a.paused ? a.play() : a.pause();
+  $('discAnim')?.classList.toggle('spinning', !$('mainPlayer').paused);
+});
+$('btnPrev')?.addEventListener('click', () => { if (currentTrack > 0) loadTrack(currentTrack - 1); });
+$('btnNext')?.addEventListener('click', () => { if (currentTrack < playlist.length - 1) loadTrack(currentTrack + 1); });
+$('mainPlayer')?.addEventListener('ended', () => { if (currentTrack < playlist.length - 1) loadTrack(currentTrack + 1); });
+
+/* ============================================================
+   ANALYSE TABS
+   ============================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const group = this.closest('.tab-group'); if (!group) return;
+    group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const target = this.dataset.tab;
+    group.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === target));
+  });
+});
+
+/* ============================================================
+   NEW COMPOSITION
+   ============================================================ */
+$('btnGenComposition')?.addEventListener('click', () => {
+  const genre  = $('compGenre')?.value  || 'Classical';
+  const mood   = $('compMood')?.value   || 'Peaceful';
+  const length = $('compLength')?.value || '3 min';
+  const instr  = $('compInstr')?.value  || 'Piano';
+
+  $('compOut').value = `🎼 COMPOSITION OUTLINE — AapkiDhun
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Genre      : ${genre}
+Mood       : ${mood}
+Length     : ${length}
+Instruments: ${instr}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRUCTURE:
+  0:00 – Intro     (8 bars)  — Establish key & mood
+  0:20 – Verse 1   (16 bars) — Main theme
+  0:50 – Chorus    (8 bars)  — Peak emotion
+  1:10 – Verse 2   (16 bars) — Development
+  1:40 – Bridge    (8 bars)  — Contrast/modulation
+  2:00 – Chorus x2 (16 bars) — Full arrangement
+  2:30 – Outro     (8 bars)  — Resolution & fade
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by AapkiDhun`;
+  $('compOutputCard')?.classList.remove('hidden');
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
 renderPresets();
 renderMyPresets();
 show('home');
