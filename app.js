@@ -1,937 +1,631 @@
-// ============================================================
-//  AapkiDhun PWA — app.js  v2.0
-//  Features: Bug Fix + 30-sec Sample + Lyrics Extractor + Link→Lyrics
-// ============================================================
-'use strict';
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AapkiDhun — Music Prompt Studio</title>
+  <meta name="theme-color" content="#ff6b00"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="icon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
 
-/* ─────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────── */
-const $ = id => document.getElementById(id);
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">AD</div>
+    <div>
+      <div class="title">AapkiDhun</div>
+      <div class="subtitle">Universal Music Prompt Studio</div>
+    </div>
+  </div>
+  <button id="btnInstall" class="btn ghost small hidden">Install</button>
+</header>
 
-function show(view) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  const el = $(view);
-  if (el) el.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.goto === view)
-  );
-}
+<nav class="nav">
+  <button class="tab active" data-view="home">🏠</button>
+  <button class="tab" data-view="prompt">🎵 Prompt</button>
+  <button class="tab" data-view="presets">📂</button>
+  <button class="tab" data-view="recorder">🎤</button>
+  <button class="tab" data-view="transcribe">🎼</button>
+  <button class="tab" data-view="analyze">🔬 Analyze</button>
+  <button class="tab" data-view="lyrics">✍️ Lyrics</button>
+  <button class="tab" data-view="nature">🌿</button>
+  <button class="tab" data-view="player">🎧</button>
+  <button class="tab" data-view="help">❓</button>
+</nav>
 
-// Nav buttons
-document.querySelectorAll('.nav-btn').forEach(b =>
-  b.addEventListener('click', () => show(b.dataset.goto))
-);
-// Feature cards on home
-document.querySelectorAll('[data-goto]').forEach(el => {
-  if (!el.classList.contains('nav-btn'))
-    el.addEventListener('click', () => show(el.dataset.goto));
-});
+<main class="container">
 
-function copyText(id) {
-  const el = $(id);
-  if (!el) return;
-  navigator.clipboard?.writeText(el.value).catch(() => {
-    el.select();
-    document.execCommand('copy');
-  });
-  alert('✅ Copied!');
-}
-
-function printText(id, title = 'AapkiDhun Output') {
-  const el = $(id);
-  if (!el) return;
-  const w = window.open('', '', 'width=800,height=600');
-  w.document.write(`<html><head><title>${title}</title></head><body><pre style="font-family:monospace;white-space:pre-wrap">${el.value}</pre></body></html>`);
-  w.document.close();
-  w.print();
-  w.close();
-}
-
-window.sendToLyrics = function () {
-  const text = $('anLyricsOut')?.value || '';
-  if ($('olText')) $('olText').value = text;
-  show('lyrics');
-};
-
-window.saveSettings = function () {
-  const lang  = $('settingLang')?.value  || '';
-  const bpm   = $('settingBpm')?.value   || '';
-  const instr = $('settingInstr')?.value || '';
-  localStorage.setItem('settings', JSON.stringify({ lang, bpm, instr }));
-  alert('✅ Settings saved!');
-};
-
-/* ─────────────────────────────────────────
-   SUNO PROMPT BUILDER
-───────────────────────────────────────── */
-function buildSunoPrompt(d) {
-  const parts = [
-    d.mode      && `[Mode: ${d.mode}]`,
-    d.language  && `Language: ${d.language}`,
-    d.theme,
-    d.stylePack && `Style: ${d.stylePack}`,
-    d.tempo     && `Tempo: ${d.tempo} BPM`,
-    d.rhythm    && `Rhythm: ${d.rhythm}`,
-    d.instruments && `Instruments: ${d.instruments}`,
-    d.vocal     && `Vocal: ${d.vocal}`,
-    d.duration  && `Duration: ${d.duration}`,
-    d.lyricsRule && `Lyrics rule: ${d.lyricsRule}`,
-    d.special
-  ].filter(Boolean);
-  let out = parts.join(', ');
-  if (out.length > 900) out = out.slice(0, 897) + '...';
-  return out;
-}
-
-/* ─────────────────────────────────────────
-   PROMPT FORM
-───────────────────────────────────────── */
-const pForm = $('promptForm');
-if (pForm) {
-  pForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const d = Object.fromEntries(new FormData(pForm));
-    const prompt = buildSunoPrompt(d);
-    $('promptOut').value = prompt;
-    $('charCount').textContent = `${prompt.length}/900 chars`;
-    $('promptOutputCard').classList.remove('hidden');
-  });
-  $('btnCopyPrompt')?.addEventListener('click', () => copyText('promptOut'));
-  $('btnClearPrompt')?.addEventListener('click', () => {
-    $('promptOut').value = '';
-    $('promptOutputCard').classList.add('hidden');
-  });
-  $('btnPrintPrompt')?.addEventListener('click', () => printText('promptOut', 'Suno Prompt'));
-  $('btnSavePreset')?.addEventListener('click', () => {
-    const d = Object.fromEntries(new FormData(pForm));
-    const presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
-    presets.push({ id: Date.now(), title: d.theme || 'My Preset', data: d });
-    localStorage.setItem('myPresets', JSON.stringify(presets));
-    renderMyPresets();
-    alert('✅ Preset saved!');
-  });
-}
-
-/* ─────────────────────────────────────────
-   BUILT-IN PRESETS
-───────────────────────────────────────── */
-const PRESETS = [
-  {
-    id: 'holi', title: 'Holi Dhamal', meta: 'Folk • Hindi • 128 BPM',
-    data: { mode: 'Festive', language: 'Hindi', theme: 'Holi celebration with colors and joy',
-      stylePack: 'Folk-Pop', tempo: '128', rhythm: 'Dadra', instruments: 'Dholak,Harmonium,Flute',
-      vocal: 'Male group', duration: '3 min', lyricsRule: 'Simple chorus repeated 3x',
-      special: 'Add crowd cheering' }
-  },
-  {
-    id: 'bhajan', title: 'Pure Bhajan', meta: 'Classical • Hindi • 72 BPM',
-    data: { mode: 'Devotional', language: 'Hindi', theme: 'Morning prayer to Radha Krishna',
-      stylePack: 'Classical-Bhajan', tempo: '72', rhythm: 'Teentaal', instruments: 'Tabla,Harmonium,Sitar',
-      vocal: 'Female solo', duration: '5 min', lyricsRule: '4 verses + refrain',
-      special: 'Peaceful and meditative' }
-  },
-  {
-    id: 'sufi', title: 'Sufi Rock Anthem', meta: 'Sufi-Rock • Urdu • 110 BPM',
-    data: { mode: 'Spiritual', language: 'Urdu', theme: 'Journey of the soul towards divine love',
-      stylePack: 'Sufi-Rock', tempo: '110', rhythm: 'Keherwa', instruments: 'Electric Guitar,Tabla,Ney Flute',
-      vocal: 'Male tenor', duration: '4 min', lyricsRule: 'Qawwali opening + rock chorus',
-      special: 'Build to crescendo' }
-  },
-  {
-    id: 'cinematic', title: 'Cinematic World', meta: 'Orchestral • Instrumental • 90 BPM',
-    data: { mode: 'Instrumental', language: 'None', theme: 'Epic journey across mountain landscapes',
-      stylePack: 'Cinematic-World', tempo: '90', rhythm: '4/4 Orchestral',
-      instruments: 'Strings,Brass,Tabla,Shehnai', vocal: 'None',
-      duration: '6 min', lyricsRule: 'No lyrics', special: 'Dramatic swells + silence moments' }
-  }
-];
-
-function renderPresets() {
-  const wrap = $('presetList');
-  if (!wrap) return;
-  wrap.innerHTML = PRESETS.map(p => `
-    <div class="preset-card">
-      <h3>${p.title}</h3>
-      <p class="meta">${p.meta}</p>
-      <div class="btn-row">
-        <button class="btn-secondary" onclick="loadPreset('${p.id}')">📂 Load</button>
-        <button class="btn-primary" onclick="genFromPreset('${p.id}')">🎵 Generate</button>
+<!-- ══════════ HOME ══════════ -->
+<section class="view" id="view-home">
+  <div class="card hero">
+    <h1>🎶 AapkiDhun</h1>
+    <p class="muted">World Music Prompt Studio — Offline + Online</p>
+    <div class="grid2">
+      <button class="btn" data-goto="analyze">🔬 Analyze + Lyrics</button>
+      <button class="btn" data-goto="prompt">🎵 Create Prompt</button>
+      <button class="btn" data-goto="lyrics">✍️ Lyrics Studio</button>
+      <button class="btn" data-goto="nature">🌿 Nature Sounds</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>⭐ Features</h2>
+    <div class="feat-grid">
+      <div class="feat-item" data-goto="analyze">
+        <div class="fi-icon">📁</div>
+        <div class="fi-title">MP3/Video/URL</div>
+        <div class="fi-desc">File ya link dono</div>
       </div>
-    </div>`).join('');
-}
+      <div class="feat-item" data-goto="analyze">
+        <div class="fi-icon">🥁</div>
+        <div class="fi-title">Beat Sync</div>
+        <div class="fi-desc">Exact BPM + groove</div>
+      </div>
+      <div class="feat-item" data-goto="analyze">
+        <div class="fi-icon">🎙️</div>
+        <div class="fi-title">Vocal Alag</div>
+        <div class="fi-desc">Singer ka prompt</div>
+      </div>
+      <div class="feat-item" data-goto="lyrics">
+        <div class="fi-icon">✍️</div>
+        <div class="fi-title">Lyrics Studio</div>
+        <div class="fi-desc">Nai + Reference</div>
+      </div>
+      <div class="feat-item" data-goto="player">
+        <div class="fi-icon">🎧</div>
+        <div class="fi-title">Music Player</div>
+        <div class="fi-desc">Offline bhi chalega</div>
+      </div>
+      <div class="feat-item" data-goto="help">
+        <div class="fi-icon">📶</div>
+        <div class="fi-title">Offline PWA</div>
+        <div class="fi-desc">Bina internet ke</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-window.loadPreset = id => {
-  const p = PRESETS.find(x => x.id === id);
-  if (!p) return;
-  const f = $('promptForm');
-  if (!f) return;
-  Object.entries(p.data).forEach(([k, v]) => {
-    if (f.elements[k]) f.elements[k].value = v;
-  });
-  show('prompt');
-};
+<!-- ══════════ PROMPT ══════════ -->
+<section class="view hidden" id="view-prompt">
+  <div class="card">
+    <h2>🎵 Prompt Builder <span class="badge">Suno ≤900</span></h2>
+    <form id="promptForm" class="form">
+      <div class="row"><label>MODE</label>
+        <select name="mode">
+          <option>Regional Folk</option><option>Holi Dhamal</option><option>Bhajan</option>
+          <option>Qawwali</option><option>Ghazal</option><option>Hindustani Classical</option>
+          <option>Carnatic Classical</option><option>Bollywood</option><option>Sufi</option>
+          <option>Jazz</option><option>Blues</option><option>Rock</option><option>Metal</option>
+          <option>EDM / Electronic</option><option>Hip-Hop / Rap</option><option>R&B / Soul</option>
+          <option>Pop</option><option>Reggae</option><option>Afrobeat</option>
+          <option>Latin / Salsa</option><option>Flamenco</option><option>Country</option>
+          <option>Gospel</option><option>Ambient / Meditation</option>
+          <option>Cinematic / Orchestral</option><option>Instrumental</option><option>World Fusion</option>
+        </select>
+      </div>
+      <div class="row"><label>LANGUAGE</label>
+        <select name="language">
+          <optgroup label="🇮🇳 Indian">
+            <option>Hindi</option><option>Marwadi / Rajasthani</option><option>Punjabi</option>
+            <option>Bengali</option><option>Gujarati</option><option>Maithili</option>
+            <option>Bhojpuri</option><option>Awadhi</option><option>Haryanvi</option>
+            <option>Tamil</option><option>Telugu</option><option>Kannada</option>
+            <option>Malayalam</option><option>Odia</option>
+          </optgroup>
+          <optgroup label="🕉️ Spiritual">
+            <option>Sanskrit (Pure)</option><option>Sanskrit + Hindi Mix</option>
+            <option>Braj Bhasha</option><option>Urdu</option>
+            <option>Arabic</option><option>Persian / Farsi</option>
+          </optgroup>
+          <optgroup label="�� Global">
+            <option>Hinglish</option><option>English</option><option>Spanish</option>
+            <option>Portuguese</option><option>French</option><option>Swahili</option>
+          </optgroup>
+          <option>None (Instrumental)</option>
+        </select>
+      </div>
+      <div class="row"><label>THEME</label>
+        <input name="theme" placeholder="e.g., Fagun Holi masti, Spiritual love, Urban night" required/>
+      </div>
+      <div class="row"><label>STYLE PACK</label>
+        <input name="stylePack" placeholder="e.g., Rajasthani-Marwadi, Pakistani Sufi Rock"/>
+      </div>
+      <div class="row"><label>TEMPO</label>
+        <input name="tempo" placeholder="e.g., 118 BPM fast, 76 BPM slow"/>
+      </div>
+      <div class="row"><label>RHYTHM</label>
+        <input name="rhythm" placeholder="e.g., Dhamal 4/4, Teen taal, 6/8 waltz"/>
+      </div>
+      <div class="row"><label>INSTRUMENTS</label>
+        <input name="instruments" placeholder="e.g., Chang, Dholak, Khartal, Harmonium"/>
+      </div>
+      <div class="row"><label>VOCAL TYPE</label>
+        <select name="vocal">
+          <optgroup label="Male">
+            <option>Solo Male — Baritone (Deep)</option>
+            <option>Solo Male — Tenor (Medium High)</option>
+            <option>Male Classical — Dhrupad/Khayal</option>
+            <option>Male Sufi — Chest voice + Alaap</option>
+            <option>Male Qawwali — Group lead</option>
+            <option>Male Bhajan — Devotional</option>
+            <option>Male Rapper — Hip-Hop MC</option>
+            <option>Male R&B — Smooth soul</option>
+            <option>Male Rock — Gritty distorted</option>
+            <option>Male Jazz — Scat improv</option>
+            <option>Male Gospel — Powerful choir</option>
+            <option>Male Folk — Regional authentic</option>
+          </optgroup>
+          <optgroup label="Female">
+            <option>Solo Female — Soprano (High)</option>
+            <option>Solo Female — Mezzo (Medium)</option>
+            <option>Solo Female — Alto (Deep warm)</option>
+            <option>Female Classical — Khayal/Thumri</option>
+            <option>Female Carnatic — South Indian</option>
+            <option>Female Folk — Regional</option>
+            <option>Female Pop — Modern clear</option>
+            <option>Female R&B — Soulful</option>
+            <option>Female Ghazal — Urdu lyrical</option>
+            <option>Female Sufi — Mystical</option>
+          </optgroup>
+          <optgroup label="Duet & Group">
+            <option>Male + Female Duet</option>
+            <option>Qawwali Group Ensemble</option>
+            <option>Choir / Full Chorus</option>
+            <option>Call & Response Group</option>
+            <option>Tribal / Folk Group Chant</option>
+          </optgroup>
+          <optgroup label="Special">
+            <option>Karaoke — No Vocals (Instrumental)</option>
+            <option>Acoustic Solo — Unplugged</option>
+            <option>High Pitch Falsetto — Ethereal</option>
+            <option>Deep Bass Voice — Dark</option>
+            <option>Child Voice — Innocent</option>
+            <option>Sanskrit Chanting — Mantra</option>
+            <option>Vintage / Old style — 50s-60s</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="row"><label>DURATION</label>
+        <select name="duration">
+          <option>Unlimited</option><option>Under 1 min</option>
+          <option>1–2 min</option><option>2–3 min</option><option>3–5 min</option>
+        </select>
+      </div>
+      <div class="row"><label>LYRICS RULE</label>
+        <input name="lyricsRule" value="Clear pronunciation, short hook, call-response"/>
+      </div>
+      <div class="row"><label>SPECIAL NOTES</label>
+        <input name="special" placeholder="e.g., No EDM drops, raw analog feel, stadium energy"/>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">⚡ Generate Prompt</button>
+        <button class="btn ghost" type="button" id="btnSavePreset">💾 Save</button>
+      </div>
+    </form>
+  </div>
+  <div class="card hidden" id="promptOutputCard">
+    <h2>📋 Prompt <span class="muted small" id="charCount"></span></h2>
+    <textarea id="promptOut" class="out" rows="12" readonly></textarea>
+    <div class="actions">
+      <button class="btn" id="btnCopyPrompt">📋 Copy</button>
+      <button class="btn ghost" id="btnPrintPrompt">🖨️ PDF</button>
+      <button class="btn ghost" id="btnClearPrompt">🗑️ Clear</button>
+    </div>
+    <div class="tool-links">
+      <a href="https://suno.com" target="_blank" class="tool-btn">🎵 Suno</a>
+      <a href="https://udio.com" target="_blank" class="tool-btn">🎶 Udio</a>
+      <a href="https://chat.openai.com" target="_blank" class="tool-btn">🤖 ChatGPT</a>
+    </div>
+  </div>
+</section>
 
-window.genFromPreset = id => {
-  const p = PRESETS.find(x => x.id === id);
-  if (!p) return;
-  const out = buildSunoPrompt(p.data);
-  $('promptOut').value = out;
-  $('charCount').textContent = `${out.length}/900 chars`;
-  $('promptOutputCard').classList.remove('hidden');
-  show('prompt');
-};
+<!-- ══════════ PRESETS ══════════ -->
+<section class="view hidden" id="view-presets">
+  <div class="card"><h2>📂 Built-in Presets</h2><div id="presetList"></div></div>
+  <div class="card"><h2>💾 My Presets</h2><div id="myPresetList"><p class="muted">No saved presets.</p></div></div>
+</section>
 
-/* ─────────────────────────────────────────
-   USER SAVED PRESETS
-───────────────────────────────────────── */
-function renderMyPresets() {
-  const wrap = $('myPresetList');
-  if (!wrap) return;
-  const presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  wrap.innerHTML = presets.length
-    ? presets.map(p => `
-        <div class="preset-card">
-          <h3>${p.title}</h3>
-          <div class="btn-row">
-            <button class="btn-secondary" onclick="loadMyPreset(${p.id})">📂 Load</button>
-            <button class="btn-danger" onclick="deleteMyPreset(${p.id})">🗑️ Delete</button>
-          </div>
-        </div>`).join('')
-    : '<p class="hint">Abhi tak koi preset save nahi hua.</p>';
-}
+<!-- ══════════ RECORDER ══════════ -->
+<section class="view hidden" id="view-recorder">
+  <div class="card">
+    <h2>🎤 Voice Recorder</h2>
+    <div class="rec">
+      <button class="btn" id="btnRecord">🔴 Start</button>
+      <button class="btn ghost" id="btnStop" disabled>⏹ Stop</button>
+      <button class="btn ghost" id="recDownload" disabled>⬇️ Download</button>
+    </div>
+    <audio id="recPlayer" class="audio" controls></audio>
+  </div>
+</section>
 
-window.loadMyPreset = id => {
-  const presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  const p = presets.find(x => x.id === id);
-  if (!p) return;
-  const f = $('promptForm');
-  if (!f) return;
-  Object.entries(p.data).forEach(([k, v]) => {
-    if (f.elements[k]) f.elements[k].value = v;
-  });
-  show('prompt');
-};
+<!-- ═���════════ TRANSCRIBE ══════════ -->
+<section class="view hidden" id="view-transcribe">
+  <div class="card">
+    <h2>🎼 Music Transcriber</h2>
+    <p class="muted">Phone/Computer file ya online link — dono kaam karenge</p>
+    <div class="form" style="margin-top:12px">
+      <div class="row"><label>GENRE PRESET</label>
+        <select id="trGenrePreset">
+          <option value="">-- Select Genre --</option>
+          <option value="folk">Folk</option>
+          <option value="hindustani">Hindustani</option>
+          <option value="carnatic">Carnatic</option>
+          <option value="qawwali">Qawwali</option>
+          <option value="bollywood">Bollywood</option>
+          <option value="jazz">Jazz</option>
+          <option value="western">Western</option>
+          <option value="hiphop">Hip-Hop</option>
+          <option value="edm">EDM</option>
+          <option value="flamenco">Flamenco</option>
+          <option value="reggae">Reggae</option>
+          <option value="world">World</option>
+        </select>
+      </div>
+      <div class="row"><label>FILE UPLOAD</label>
+        <input id="trFile" type="file" accept="audio/*,video/*,text/*"/>
+        <div id="trFileInfo" class="hidden"></div>
+      </div>
+      <div class="row"><label>LINK</label>
+        <input id="trLink" placeholder="YouTube, SoundCloud, MP3 link..."/>
+      </div>
+      <div class="row"><label>GENRE</label>
+        <input id="trGenre" placeholder="e.g., Folk, Hindustani"/>
+      </div>
+      <div class="row"><label>KEY</label>
+        <input id="trKey" placeholder="e.g., G Major, D Minor"/>
+      </div>
+      <div class="row"><label>BPM</label>
+        <input id="trBpm" placeholder="e.g., 118 BPM"/>
+      </div>
+      <div class="row"><label>INSTRUMENTS</label>
+        <input id="trInstruments" placeholder="Sitar, Tabla, etc"/>
+      </div>
+    </div>
+    <div class="actions"><button class="btn" id="btnTranscribe">🎼 Generate Music Sheet</button></div>
+  </div>
+  <div class="card hidden" id="trOutputCard">
+    <h2>📄 Music Sheet Output</h2>
+    <textarea id="trOut" class="out sheet-out" rows="24" readonly></textarea>
+    <div class="actions">
+      <button class="btn" onclick="copyText('trOut')">📋 Copy</button>
+      <button class="btn ghost" onclick="printText('trOut','Music Sheet')">🖨️ PDF</button>
+    </div>
+  </div>
+  <div class="card hidden" id="trLyricsCard">
+    <h2>🎤 Lyrics Extracted</h2>
+    <textarea id="trLyricsOut" class="out" rows="12" readonly></textarea>
+    <div class="actions">
+      <button class="btn" onclick="copyText('trLyricsOut')">📋 Copy</button>
+      <button class="btn" onclick="window.sendToLyrics()">✍️ Edit in Lyrics Studio</button>
+    </div>
+  </div>
+</section>
 
-window.deleteMyPreset = id => {
-  let presets = JSON.parse(localStorage.getItem('myPresets') || '[]');
-  presets = presets.filter(x => x.id !== id);
-  localStorage.setItem('myPresets', JSON.stringify(presets));
-  renderMyPresets();
-};
+<!-- ══════════ ANALYZE ══════════ -->
+<section class="view hidden" id="view-analyze">
+  <div class="card">
+    <h2>🔬 Music Analyzer</h2>
+    <p class="muted">MP3/Video upload karo ya online link — Music Sheet milega</p>
+    <div class="form" style="margin-top:12px">
+      <div class="row"><label>FILE UPLOAD</label>
+        <input id="anFile" type="file" accept="audio/*,video/*,text/*"/>
+        <div id="anFileInfo" class="hidden"></div>
+      </div>
+      <div class="row"><label>LINK</label>
+        <input id="anLink" placeholder="YouTube, SoundCloud, MP3 link..."/>
+      </div>
+      <div class="row"><label>GENRE</label>
+        <select id="anGenre">
+          <option value="auto">Auto Detect</option>
+          <option>Regional Folk</option><option>Hindustani Classical</option>
+          <option>Carnatic Classical</option><option>Bollywood</option>
+          <option>Qawwali / Sufi</option><option>Bhajan</option><option>Ghazal</option>
+          <option>Jazz</option><option>Blues</option><option>Rock</option>
+          <option>Hip-Hop</option><option>EDM</option><option>Reggae</option>
+          <option>Flamenco</option><option>African</option><option>Latin</option>
+          <option>World Fusion</option>
+        </select>
+      </div>
+      <div class="row"><label>KEY</label>
+        <input id="anKey" placeholder="Auto detect or e.g., G Major"/>
+      </div>
+      <div class="row"><label>BPM</label>
+        <input id="anBpm" placeholder="Auto detect or enter number"/>
+      </div>
+      <div class="row"><label>VOCAL</label>
+        <select id="anVocal">
+          <option value="auto">Auto Detect</option>
+          <option>Solo Male — Baritone</option><option>Solo Male — Tenor</option>
+          <option>Solo Female — Soprano</option><option>Solo Female — Mezzo</option>
+          <option>Male + Female Duet</option><option>Qawwali Group</option>
+          <option>Choir / Chorus</option><option>No Vocals (Instrumental)</option>
+        </select>
+      </div>
+      <div class="row"><label>INSTRUMENTS</label>
+        <input id="anInstr" placeholder="Piano, Guitar, etc"/>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnAnalyze">⚡ Generate Music Sheet</button>
+    </div>
+  </div>
 
-/* ─────────────────────────────────────────
-   PWA INSTALL
-───────────────────────────────────────── */
-let deferredInstall;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstall = e;
-  const btn = $('installBtn');
-  if (btn) btn.classList.remove('hidden');
-});
-$('installBtn')?.addEventListener('click', () => { deferredInstall?.prompt(); });
+  <div class="card hidden" id="anOutputCard">
+    <h2>📄 Analysis Results</h2>
+    <textarea id="fullOut" class="out sheet-out" rows="20" readonly></textarea>
+    <div class="actions">
+      <button class="btn" onclick="copyText('fullOut')">📋 Copy</button>
+      <button class="btn ghost" onclick="printText('fullOut','Music Sheet')">🖨️ PDF</button>
+    </div>
+    <textarea id="beatOut" class="out sheet-out" rows="14" readonly style="margin-top:10px"></textarea>
+    <textarea id="instrOut" class="out sheet-out" rows="14" readonly style="margin-top:10px"></textarea>
+    <textarea id="vocalOut" class="out sheet-out" rows="14" readonly style="margin-top:10px"></textarea>
+  </div>
 
-/* ─────────────────────────────────────────
-   AUDIO RECORDER
-───────────────────────────────────────── */
-let recorder, recChunks = [];
-$('btnRecord')?.addEventListener('click', async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    recorder = new MediaRecorder(stream);
-    recChunks = [];
-    recorder.ondataavailable = e => recChunks.push(e.data);
-    recorder.onstop = () => {
-      const blob = new Blob(recChunks, { type: 'audio/webm' });
-      const url = URL.createObjectURL(blob);
-      const player = $('recPlayer');
-      if (player) { player.src = url; player.classList.remove('hidden'); }
-      const dl = $('recDownload');
-      if (dl) { dl.href = url; dl.download = 'recording.webm'; dl.classList.remove('hidden'); }
-    };
-    recorder.start();
-    $('btnRecord').disabled = true;
-    $('btnStop')?.removeAttribute('disabled');
-  } catch (err) {
-    alert('Mic permission nahi mili: ' + err.message);
+  <div class="card hidden" id="sampleCard">
+    <h2>▶ 30-Sec Sample Player</h2>
+    <div class="actions">
+      <button class="btn" id="btnPlaySample">▶ Play 30-sec Sample</button>
+      <button class="btn ghost hidden" id="btnStopSample">⏹ Stop</button>
+    </div>
+    <div id="sampleStatus" class="muted small" style="margin-top:10px">File ready</div>
+  </div>
+
+  <div class="card hidden" id="anLyricsCard">
+    <h2>🎤 Lyrics Extracted</h2>
+    <textarea id="anLyricsOut" class="out" rows="12" readonly></textarea>
+    <div class="actions">
+      <button class="btn" onclick="copyText('anLyricsOut')">📋 Copy</button>
+      <button class="btn" onclick="window.sendToLyrics()">✍️ Edit in Lyrics Studio</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ LYRICS ══════════ -->
+<section class="view hidden" id="view-lyrics">
+  <div class="card">
+    <h2>✍️ Lyrics Studio</h2>
+  </div>
+
+  <div class="card">
+    <h3>🆕 New Lyrics</h3>
+    <div class="form">
+      <div class="row"><label>LANGUAGE</label>
+        <select id="nlLang">
+          <option>Hindi</option><option>Marwadi</option><option>Punjabi</option>
+          <option>Bengali</option><option>Sanskrit</option><option>Urdu</option>
+          <option>Tamil</option><option>Telugu</option><option>Hinglish</option>
+          <option>English</option><option>Arabic</option>
+        </select>
+      </div>
+      <div class="row"><label>VOCAL</label>
+        <select id="nlVocal">
+          <option>Solo Male — Baritone</option><option>Solo Male — Tenor</option>
+          <option>Solo Female — Soprano</option><option>Solo Female — Mezzo</option>
+          <option>Male Classical</option><option>Female Classical</option>
+          <option>Duet</option><option>Choir</option>
+        </select>
+      </div>
+      <div class="row"><label>THEME</label>
+        <input id="nlTheme" placeholder="e.g., Love, Devotion, etc" required/>
+      </div>
+      <div class="row"><label>MOOD</label>
+        <select id="nlMood">
+          <option>Romantic</option><option>Devotional</option><option>Happy</option>
+          <option>Sad</option><option>Energetic</option><option>Peaceful</option>
+        </select>
+      </div>
+      <div class="row"><label>BPM</label>
+        <input id="nlBpm" placeholder="e.g., 90 BPM"/>
+      </div>
+      <div class="row"><label>INSTRUMENTS</label>
+        <input id="nlInstr" placeholder="Piano, Guitar, etc"/>
+      </div>
+      <div class="row"><label>REFERENCE</label>
+        <input id="nlRef" placeholder="Optional reference"/>
+      </div>
+      <div class="row"><label>LINK (Optional)</label>
+        <input id="nlLink" placeholder="Inspiration link"/>
+      </div>
+    </div>
+    <button class="btn" id="btnGenNewLyrics" style="margin-top:10px">⚡ Generate</button>
+    <div class="card hidden" id="nlOutputCard" style="margin-top:10px">
+      <textarea id="nlOut" class="out" rows="16" readonly></textarea>
+      <div class="actions">
+        <button class="btn" onclick="copyText('nlOut')">📋 Copy</button>
+        <button class="btn ghost" onclick="printText('nlOut','Lyrics')">🖨️ PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📝 Original Lyrics Analysis</h3>
+    <textarea id="olText" class="out" rows="6" placeholder="Paste lyrics here..."></textarea>
+    <div class="form" style="margin-top:10px">
+      <div class="row"><label>LANGUAGE</label>
+        <select id="olLang">
+          <option>Hindi</option><option>Urdu</option><option>English</option>
+          <option>Sanskrit</option><option>Punjabi</option>
+        </select>
+      </div>
+      <div class="row"><label>TYPE</label>
+        <select id="olType">
+          <option>Full Analysis</option><option>Quick Check</option><option>Suno Ready</option>
+        </select>
+      </div>
+      <div class="row"><label>VOCAL</label>
+        <select id="olVocal">
+          <option>Male</option><option>Female</option><option>Duet</option><option>Choir</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" id="btnAnalyzeLyrics" style="margin-top:10px">🔍 Analyze</button>
+    <div class="card hidden" id="olOutputCard" style="margin-top:10px">
+      <textarea id="olOut" class="out" rows="14" readonly></textarea>
+      <div class="actions">
+        <button class="btn" onclick="copyText('olOut')">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔗 Reference Lyrics</h3>
+    <div class="form">
+      <div class="row"><label>REFERENCE THEME</label>
+        <input id="rlRefTheme" placeholder="e.g., Love, Bhakti"/>
+      </div>
+      <div class="row"><label>ORIGINAL TEXT</label>
+        <textarea id="rlOrigText" rows="3" placeholder="Optional original text"></textarea>
+      </div>
+      <div class="row"><label>TARGET LANGUAGE</label>
+        <select id="rlTargLang">
+          <option>Hindi</option><option>Urdu</option><option>English</option>
+          <option>Sanskrit</option><option>Punjabi</option>
+        </select>
+      </div>
+      <div class="row"><label>TARGET MOOD</label>
+        <select id="rlTargMood">
+          <option>Romantic</option><option>Devotional</option><option>Happy</option>
+          <option>Sad</option><option>Energetic</option>
+        </select>
+      </div>
+      <div class="row"><label>VOCAL</label>
+        <select id="rlVocal">
+          <option>Male</option><option>Female</option><option>Duet</option>
+        </select>
+      </div>
+      <div class="row"><label>STYLE</label>
+        <select id="rlStyle">
+          <option>Folk</option><option>Classical</option><option>Modern</option>
+          <option>Qawwali</option><option>Pop</option>
+        </select>
+      </div>
+      <div class="row"><label>LINK (Optional)</label>
+        <input id="rlLink" placeholder="Reference link"/>
+      </div>
+    </div>
+    <button class="btn" id="btnGenRefLyrics" style="margin-top:10px">🎯 Generate</button>
+    <div class="card hidden" id="rlOutputCard" style="margin-top:10px">
+      <textarea id="rlOut" class="out" rows="14" readonly></textarea>
+      <div class="actions">
+        <button class="btn" onclick="copyText('rlOut')">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ��═════════ NATURE ══════════ -->
+<section class="view hidden" id="view-nature">
+  <div class="card">
+    <h2>🌿 Nature Sound Studio</h2>
+    <div class="form">
+      <div class="row"><label>GENRE</label>
+        <select id="natureGenre">
+          <option>Meditation / Ambient</option><option>Folk + Nature</option>
+          <option>Cinematic</option><option>Lo-Fi Chill</option>
+        </select>
+      </div>
+      <div class="row"><label>MOOD</label>
+        <select id="natureMood">
+          <option>Peaceful</option><option>Mystical</option><option>Energetic</option>
+          <option>Healing</option><option>Romantic</option><option>Epic</option>
+        </select>
+      </div>
+      <div class="row"><label>BPM</label>
+        <input id="natureBpm" placeholder="e.g., 60 BPM slow"/>
+      </div>
+      <div class="row"><label>LAYERS</label>
+        <input id="natureLayer" placeholder="e.g., 3 layers"/>
+      </div>
+      <div class="row"><label>INTENSITY</label>
+        <select id="natureIntensity">
+          <option>Subtle</option><option>Moderate</option><option>Strong</option><option>Dominant</option>
+        </select>
+      </div>
+      <div class="row"><label>SPECIAL</label>
+        <input id="natureSpecial" placeholder="e.g., Thunder on beat"/>
+      </div>
+    </div>
+    <button class="btn" id="btnGenNature" style="margin-top:10px">⚡ Generate Prompt</button>
+    <button class="btn ghost" id="btnClearNature" style="margin-top:10px">🗑️ Clear</button>
+  </div>
+
+  <div class="card hidden" id="natureOutputCard">
+    <textarea id="natureOut" class="out" rows="12" readonly></textarea>
+    <div class="actions">
+      <button class="btn" onclick="copyText('natureOut')">📋 Copy</button>
+      <a href="https://suno.com" target="_blank" class="tool-btn">🎵 Suno</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PLAYER ══════════ -->
+<section class="view hidden" id="view-player">
+  <div class="card">
+    <h2>🎧 Offline Player</h2>
+    <div class="form">
+      <input id="playerFile" type="file" accept="audio/*" multiple/>
+      <label for="playerFile" class="btn" style="display:inline-block;margin-top:8px">📂 Load Music</label>
+    </div>
+  </div>
+  <div class="card">
+    <div id="discAnim" class="player-disc">🎵</div>
+    <div id="trackInfo" class="track-info">No track loaded</div>
+    <audio id="mainPlayer" class="audio" controls style="width:100%;margin-top:8px"></audio>
+    <div class="actions">
+      <button class="btn ghost" id="btnPrev">⏮ Prev</button>
+      <button class="btn" id="btnPlay">▶️ Play</button>
+      <button class="btn ghost" id="btnNext">Next ⏭</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ HELP ══════════ -->
+<section class="view hidden" id="view-help">
+  <div class="card hero">
+    <h2>❓ Help & Guide</h2>
+    <p class="muted">AapkiDhun ka poora tutorial</p>
+  </div>
+  <div class="card">
+    <h3>🎵 Prompt Builder</h3>
+    <p class="muted small">Genre, Language, Vocal, Instruments choose karo → Generate karo → Suno/Udio me paste karo. Limit: 900 chars max.</p>
+  </div>
+  <div class="card">
+    <h3>🔬 Analyze / 🎼 Transcribe</h3>
+    <p class="muted small">MP3/WAV/MP4 phone se upload karo ya YouTube/SoundCloud link dalo → Music Sheet milega with MIDI notes, Chords, Beat map, Vocal notes.</p>
+  </div>
+  <div class="card">
+    <h3>✍️ Lyrics Studio</h3>
+    <p class="muted small">3 tabs: New = fresh lyrics | Original = analyze your lyrics | Reference = use song style for new lyrics. 14+ languages, 20+ vocal types.</p>
+  </div>
+  <div class="card">
+    <h3>🌿 Nature Sounds</h3>
+    <p class="muted small">Select sounds, intensity, layer → Generate prompt for Suno/Udio.</p>
+  </div>
+  <div class="card">
+    <h3>🎧 Offline Player</h3>
+    <p class="muted small">📂 Load Music → phone ki MP3/WAV files → Prev/Play/Next. Bina internet ke bhi kaam karega.</p>
+  </div>
+  <div class="card">
+    <h3>📶 PWA Install</h3>
+    <p class="muted small">Browser me "Add to Home Screen" option se install karo. Ek baar install hone ke baad app bina internet ke bhi poori tarah kaam karega.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <span class="muted small">AapkiDhun PWA v4.0 • World Music Prompt Studio • Offline Ready 🎶</span>
+</footer>
+
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW:', e));
+    });
   }
-});
-$('btnStop')?.addEventListener('click', () => {
-  recorder?.stop();
-  $('btnRecord').disabled = false;
-  if ($('btnStop')) $('btnStop').disabled = true;
-});
-
-/* ─────────────────────────────────────────
-   ANALYSIS SHEET BUILDERS
-───────────────────────────────────────── */
-function buildMusicSheet(genre, key, bpm, instr, vocal) {
-  return `🎼 MUSIC SHEET — AapkiDhun Analysis
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Genre      : ${genre}
-Key        : ${key}
-BPM        : ${bpm}
-Instruments: ${instr}
-Vocal      : ${vocal}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MIDI Notes (approx):
-  Intro   : [C4-E4-G4] x2
-  Verse   : [A3-C4-E4-G4]
-  Chorus  : [F4-A4-C5]
-  Bridge  : [G4-B4-D5]
-  Outro   : [C4] fade
-
-Chords   : ${key} maj → IV → V → vi
-ABC Notation:
-  X:1
-  T:${genre} Analysis
-  M:4/4
-  K:${key}
-  |: CEGC | ACEG | FACE | GBDG :|
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-}
-
-function buildSunoReplicationPrompt(srcLabel, genre, key, bpm, vocal) {
-  return `🎯 SUNO AI REPLICATION PROMPT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Source   : ${srcLabel}
-Genre    : ${genre}
-Key      : ${key}
-BPM      : ${bpm}
-Vocal    : ${vocal}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PASTE IN SUNO → "Style of Music":
-${genre}, ${key} key, ${bpm} BPM, ${vocal} vocals,
-authentic instrumentation, traditional arrangement,
-high production quality, emotional depth
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REINFORCEMENT LINE:
-"${genre} song in ${key}, ${bpm} BPM, ${vocal}, true to tradition"
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-}
-
-function buildBeatSheet(bpm, rhythm) {
-  const beats = parseInt(bpm) || 120;
-  return `🥁 BEAT ANALYSIS — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-BPM      : ${beats}
-Rhythm   : ${rhythm}
-Time Sig : 4/4
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Beat Map (1 bar):
-  1  +  2  +  3  +  4  +
-  K     S     K  K  S
-  (K=Kick  S=Snare  H=HiHat)
-
-Groove Pattern:
-  Intro   : 4-bar build, half-time feel
-  Verse   : standard ${rhythm} pattern
-  Chorus  : double kick + open HH
-  Bridge  : breakdown + fill
-  Outro   : fade with reverb tail
-
-Subdivision: 16th-note grid
-Swing      : 5%
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-}
-
-function buildInstrSheet(instr) {
-  const list = instr.split(/[,،\n]+/).map(i => i.trim()).filter(Boolean);
-  return `🎸 INSTRUMENT BREAKDOWN — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Detected Instruments:
-${list.map((ins, i) =>
-  `  ${i + 1}. ${ins}
-     Role   : Lead / Rhythm / Texture
-     Range  : Typical ${ins} range
-     MIDI CC: Mod=1, Vol=7, Pan=10`).join('\n')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Layering Suggestion:
-  Layer 1 (Foundation): ${list[0] || 'Rhythm instrument'}
-  Layer 2 (Melody)    : ${list[1] || 'Lead instrument'}
-  Layer 3 (Texture)   : ${list[2] || 'Pad / Atmosphere'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-}
-
-function buildVocalSheet(vocal) {
-  return `🎙️ VOCAL ANALYSIS — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Vocal Type  : ${vocal}
-Range       : C3 – A5 (approx)
-Techniques  : Vibrato, Gamak, Meend, Sargam
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Vocal Notes:
-  Verse   : Mid-range, conversational
-  Chorus  : Upper register, sustained
-  Bridge  : Emotional peak, ornamentation
-  Outro   : Descend, fade
-
-Vocal MIDI (approx):
-  Pitch   : 60 (C4) to 81 (A5)
-  Velocity: 90–110 (dynamics)
-  Vibrato : CC1 mod wheel
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-}
-
-/* ─────────────────────────────────────────
-   NEW FEATURE 1 — 30-SEC SAMPLE PLAYER
-───────────────────────────────────────── */
-let sampleAudioCtx = null;
-let sampleSource   = null;
-
-function playSample30(file, startSec = 0) {
-  if (!file) {
-    alert('⚠️ Pehle Analyze section mein file upload karo!');
-    return;
-  }
-  const DURATION = 30;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    try {
-      if (sampleSource) { try { sampleSource.stop(); } catch (_) {} }
-      if (!sampleAudioCtx || sampleAudioCtx.state === 'closed') {
-        sampleAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const arrayBuf = ev.target.result;
-      const audioBuf = await sampleAudioCtx.decodeAudioData(arrayBuf);
-      const src = sampleAudioCtx.createBufferSource();
-      src.buffer = audioBuf;
-      src.connect(sampleAudioCtx.destination);
-      const offset = Math.min(startSec, audioBuf.duration - 1);
-      const dur = Math.min(DURATION, audioBuf.duration - offset);
-      src.start(0, offset, dur);
-      sampleSource = src;
-      updateSampleUI(true);
-      const statusEl = $('sampleStatus');
-      if (statusEl) statusEl.textContent = `▶ Playing ${dur.toFixed(0)} sec sample...`;
-      src.onended = () => {
-        updateSampleUI(false);
-        if (statusEl) statusEl.textContent = '✅ Sample playback complete.';
-      };
-    } catch (err) {
-      alert('Audio decode error: ' + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function stopSample() {
-  try { sampleSource?.stop(); } catch (_) {}
-  updateSampleUI(false);
-  const statusEl = $('sampleStatus');
-  if (statusEl) statusEl.textContent = '⏹ Stopped.';
-}
-
-function updateSampleUI(playing) {
-  const btn     = $('btnPlaySample');
-  const stopBtn = $('btnStopSample');
-  if (btn)     btn.textContent = playing ? '⏸ Playing...' : '▶ Play 30-sec Sample';
-  if (stopBtn) stopBtn.classList.toggle('hidden', !playing);
-}
-
-/* ─────────────────────────────────────────
-   NEW FEATURE 2 — LYRICS EXTRACTOR
-───────────────────────────────────────── */
-function extractLyricsFromText(rawText) {
-  const lines = rawText
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 8 && l.length < 120);
-  const lyricsLines = lines.filter(l => !/^[#\[<{]/.test(l));
-  return lyricsLines.slice(0, 40).join('\n');
-}
-
-function buildLyricsSheet(src, rawLyrics) {
-  return `🎤 LYRICS EXTRACTED — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Source: ${src}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${rawLyrics || '(No readable lyrics found — try a .txt file with lyrics)'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Tip: "Edit in Lyrics Studio" button se in lyrics ko edit karo!
-Generated by AapkiDhun v2.0`;
-}
-
-/* ─────────────────────────────────────────
-   NEW FEATURE 3 — LINK → NEW LYRICS
-───────────────────────────────────────── */
-function buildNewLyricsFromLink(url, lang, mood, theme) {
-  const domain = (() => {
-    try { return new URL(url).hostname.replace('www.', ''); }
-    catch (_) { return url.slice(0, 40); }
-  })();
-  return `✍️ INSPIRED LYRICS — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Inspired by : ${domain}
-Language    : ${lang}
-Mood        : ${mood}
-Theme       : ${theme}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Mukhda / Hook]
-${theme} ki baat sunao,
-${mood} mein dil ko batao,
-Har pal mein teri yaad,
-Zindagi ka ye iraada...
-
-[Antara 1 / Verse 1]
-Roshni leke aaya ye din,
-${theme} ne toda har zanjeer,
-${lang} mein kehte hain log yahan,
-Dil ki awaaz, sachchi takdeer...
-
-[Antara 2 / Verse 2]
-Raah mein kante aaye bhi agar,
-${mood} ka daaman thamna hai,
-Sapno ki duniya bana kar humne,
-Har mushkil se ladna hai...
-
-[Chorus]
-Aage badhte chalte rahein,
-${theme} ki roshni mein,
-Har lamha jeete rahein,
-Apni hi boli, apni hi zameen...
-
-[Outro]
-${theme}... ${mood}...
-Bas teri hi awaaz hai,
-Zindagi mein rang hai,
-Teri hi pehchaan hai...
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0 | Paste into Suno Lyrics box`;
-}
-
-/* ─────────────────────────────────────────
-   TRANSCRIBE TAB
-───────────────────────────────────────── */
-const GENRE_PRESETS_TR = {
-  folk:       'Folk, Hindustani, Dholak, 90 BPM, D minor',
-  hindustani: 'Hindustani Classical, Sitar, Tabla, 60 BPM, Yaman',
-  carnatic:   'Carnatic Classical, Veena, Mridangam, 80 BPM, Shankarabharanam',
-  qawwali:    'Qawwali, Harmonium, Tabla, 100 BPM, G minor',
-  bollywood:  'Bollywood, Strings, Dhol, 110 BPM, C major',
-  jazz:       'Jazz, Piano, Bass, Drums, 120 BPM, Bb major',
-  western:    'Western Pop, Guitar, Bass, 128 BPM, G major',
-  hiphop:     'Hip-Hop, 808 Bass, 90 BPM, F# minor',
-  edm:        'EDM, Synth, 140 BPM, A minor',
-  flamenco:   'Flamenco, Guitar, Cajon, 100 BPM, Phrygian',
-  reggae:     'Reggae, Bass, Organ, 80 BPM, E minor',
-  world:      'World Music, Mixed, 95 BPM, Pentatonic'
-};
-
-let trFile = null;
-
-$('trGenrePreset')?.addEventListener('change', function () {
-  if (this.value && GENRE_PRESETS_TR[this.value]) {
-    if ($('trGenre'))
-      $('trGenre').value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
-  }
-});
-
-$('trFile')?.addEventListener('change', function () {
-  trFile = this.files[0] || null;
-  const info = $('trFileInfo');
-  if (info && trFile)
-    info.textContent = `📁 ${trFile.name} (${(trFile.size / 1024).toFixed(1)} KB)`;
-});
-
-/* ── BUG FIX: Transcribe generate button now works ── */
-$('btnTranscribe')?.addEventListener('click', () => {
-  const genre    = $('trGenre')?.value        || 'Unknown';
-  const key      = $('trKey')?.value          || 'C';
-  const bpm      = $('trBpm')?.value          || '120';
-  const instr    = $('trInstruments')?.value  || 'Piano';
-  const srcLabel = trFile ? trFile.name : ($('trLink')?.value || 'Unknown source');
-
-  $('trOut').value = buildMusicSheet(genre, key, bpm, instr, 'Vocal');
-  $('trOutputCard').classList.remove('hidden');
-
-  // Feature 2: extract lyrics from text file
-  if (trFile && (trFile.type.startsWith('text') || trFile.name.endsWith('.txt') || trFile.name.endsWith('.lrc'))) {
-    const r = new FileReader();
-    r.onload = ev => {
-      const lyrics = extractLyricsFromText(ev.target.result);
-      const lSheet = buildLyricsSheet(srcLabel, lyrics);
-      if ($('trLyricsOut')) $('trLyricsOut').value = lSheet;
-      $('trLyricsCard')?.classList.remove('hidden');
-    };
-    r.readAsText(trFile);
-  }
-});
-
-/* ─────────────────────────────────────────
-   ANALYZE TAB  (Bug Fix + Feature 1 + Feature 2)
-───────────────────────────────────────── */
-let anFile = null;
-
-$('anFile')?.addEventListener('change', function () {
-  anFile = this.files[0] || null;
-  const info = $('anFileInfo');
-  if (info && anFile)
-    info.textContent = `📁 ${anFile.name} (${(anFile.size / 1024).toFixed(1)} KB)`;
-  // Hide sample card until analysis is run
-  $('sampleCard')?.classList.add('hidden');
-});
-
-/* ── BUG FIX: Analyze generate button now works ── */
-$('btnAnalyze')?.addEventListener('click', () => {
-  const genre    = $('anGenre')?.value  || 'Unknown';
-  const key      = $('anKey')?.value    || 'C';
-  const bpm      = $('anBpm')?.value    || '120';
-  const vocal    = $('anVocal')?.value  || 'Male solo';
-  const instr    = $('anInstr')?.value  || 'Piano';
-  const srcLabel = anFile ? anFile.name : ($('anLink')?.value || 'Unknown source');
-
-  $('fullOut').value  = buildSunoReplicationPrompt(srcLabel, genre, key, bpm, vocal);
-  $('beatOut').value  = buildBeatSheet(bpm, 'Keherwa');
-  $('instrOut').value = buildInstrSheet(instr);
-  $('vocalOut').value = buildVocalSheet(vocal);
-
-  $('anOutputCard')?.classList.remove('hidden');
-
-  // Feature 1: show 30-sec sample player if audio file uploaded
-  if (anFile && anFile.type.startsWith('audio')) {
-    $('sampleCard')?.classList.remove('hidden');
-    if ($('sampleStatus')) $('sampleStatus').textContent = 'File ready — Play dabao!';
-  }
-
-  // Feature 2: extract lyrics if text file
-  if (anFile && (anFile.type.startsWith('text') || anFile.name.endsWith('.txt') || anFile.name.endsWith('.lrc'))) {
-    const r = new FileReader();
-    r.onload = ev => {
-      const lyrics = extractLyricsFromText(ev.target.result);
-      const lSheet = buildLyricsSheet(anFile.name, lyrics);
-      if ($('anLyricsOut')) $('anLyricsOut').value = lSheet;
-      $('anLyricsCard')?.classList.remove('hidden');
-    };
-    r.readAsText(anFile);
-  }
-});
-
-// Sample player button clicks
-$('btnPlaySample')?.addEventListener('click', () => playSample30(anFile));
-$('btnStopSample')?.addEventListener('click', () => stopSample());
-
-/* ─────────────────────────────────────────
-   LYRICS STUDIO — NEW LYRICS + FEATURE 3
-───────────────────────────────────────── */
-$('btnGenNewLyrics')?.addEventListener('click', () => {
-  const theme = $('nlTheme')?.value || 'Love';
-  const lang  = $('nlLang')?.value  || 'Hindi';
-  const mood  = $('nlMood')?.value  || 'Romantic';
-  const bpm   = $('nlBpm')?.value   || '90';
-  const vocal = $('nlVocal')?.value || 'Female solo';
-  const instr = $('nlInstr')?.value || 'Piano';
-  const ref   = $('nlRef')?.value   || '';
-  const link  = $('nlLink')?.value  || '';
-
-  let out;
-  if (link) {
-    // Feature 3: link-based inspired lyrics
-    out = buildNewLyricsFromLink(link, lang, mood, theme);
-  } else {
-    out = `✍️ NEW LYRICS — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Theme      : ${theme}
-Language   : ${lang}
-Mood       : ${mood}
-BPM        : ${bpm}
-Vocal      : ${vocal}
-Instruments: ${instr}
-Reference  : ${ref || 'None'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Mukhda / Hook]
-${theme} ki baat karein,
-Dil se jo baat nikle,
-${mood} mein doobe hain hum,
-Har pal mein jee lein...
-
-[Antara 1 / Verse 1]
-Subah ki roshni jaise,
-${theme} ka ehsaas hai,
-${lang} mein kehte hain log,
-Dil ki ye awaaz hai...
-
-[Antara 2 / Verse 2]
-Raah mein mushkil aaye bhi agar,
-${mood} ka saath hai apna,
-Har pal mein jeena hai,
-Yahi to hai sapna...
-
-[Chorus]
-${theme}... ${mood}...
-Har pal, har lamha, tere sang,
-Zindagi bane rangeen,
-Apni hi boli, apni hi zameen...
-
-[Outro]
-Yahi hai dastaan apni,
-${theme} ki pehchaan apni,
-Har saans mein tu hai,
-Har rang mein tu hai...
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-  }
-
-  $('nlOut').value = out;
-  $('nlOutputCard')?.classList.remove('hidden');
-});
-
-/* ─────────────────────────────────────────
-   ORIGINAL LYRICS ANALYSIS
-───────────────────────────────────────── */
-$('btnAnalyzeLyrics')?.addEventListener('click', () => {
-  const text  = $('olText')?.value  || '';
-  const lang  = $('olLang')?.value  || 'Hindi';
-  const atype = $('olType')?.value  || 'Full Analysis';
-  const vocal = $('olVocal')?.value || 'Male';
-
-  if (!text.trim()) { alert('⚠️ Pehle lyrics paste karo!'); return; }
-
-  const words  = text.split(/\s+/).filter(w => w.length > 0);
-  const lines  = text.split('\n').filter(l => l.trim().length > 0);
-  const verses = Math.ceil(lines.length / 4);
-  const keywords = [...new Set(words.filter(w => w.length > 4))].slice(0, 8).join(', ');
-
-  $('olOut').value = `🔍 LYRICS ANALYSIS — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Language : ${lang}
-Type     : ${atype}
-Vocal    : ${vocal}
-Chars    : ${text.length}
-Words    : ${words.length}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STRUCTURE:
-  Lines detected  : ${lines.length}
-  Estimated verses: ${verses}
-  Rhyme scheme    : ABAB (approx)
-  Syllable count  : ~${words.length * 2} syllables
-
-THEME KEYWORDS:
-  ${keywords || 'N/A'}
-
-SUNO STYLE TAG:
-  "${lang} song, ${vocal} vocal, ${atype.toLowerCase()}"
-
-SUNO PROMPT SUGGESTION:
-  "${lang}, ${vocal} vocals, emotional, traditional,
-  ${lines.length}-line song, authentic arrangement"
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-
-  $('olOutputCard')?.classList.remove('hidden');
-});
-
-/* ─────────────────────────────────────────
-   REFERENCE LYRICS
-───────────────────────────────────────── */
-$('btnGenRefLyrics')?.addEventListener('click', () => {
-  const refTheme = $('rlRefTheme')?.value || 'Love';
-  const origText = $('rlOrigText')?.value || '';
-  const targLang = $('rlTargLang')?.value || 'Hindi';
-  const targMood = $('rlTargMood')?.value || 'Romantic';
-  const vocal    = $('rlVocal')?.value    || 'Female solo';
-  const style    = $('rlStyle')?.value    || 'Folk';
-  const link     = $('rlLink')?.value     || '';
-
-  let base;
-  if (link) {
-    base = buildNewLyricsFromLink(link, targLang, targMood, refTheme);
-  } else {
-    base = `✍️ REFERENCE LYRICS — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Reference: ${refTheme}
-Language : ${targLang}
-Mood     : ${targMood}
-Vocal    : ${vocal}
-Style    : ${style}
-Original : ${origText ? origText.slice(0, 80) + '...' : 'None'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Inspired Verse]
-${refTheme} ki tarah hain tum,
-${targMood} mein doobe hum,
-${style} ki dhun mein likhi,
-Ye nayee baat apni...
-
-[Chorus]
-${refTheme}, ${targLang}, ${vocal},
-Har saans mein tum hi ho,
-Dil ki har tarang mein,
-Teri awaaz suno...
-
-[Bridge]
-Waqt ke saaye mein,
-${refTheme} ka rang liye,
-${targMood} ki roshni mein,
-Aage badhte chalein...
-
-[Outro]
-${style} ki duniya mein,
-${targLang} mein gaayen hum,
-${refTheme} ka ye safar,
-Zindagi se hai zyada...
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-  }
-
-  $('rlOut').value = base;
-  $('rlOutputCard')?.classList.remove('hidden');
-});
-
-/* ─────────────────────────────────────────
-   NATURE SOUND STUDIO
-───────────────────────────────────────── */
-const natureSounds = [];
-document.querySelectorAll('.sound-chip').forEach(chip => {
-  chip.addEventListener('click', function () {
-    const val = this.dataset.sound;
-    if (this.classList.toggle('active')) {
-      if (natureSounds.length >= 5) {
-        this.classList.remove('active');
-        alert('⚠️ Maximum 5 sounds select kar sakte ho!');
-        return;
-      }
-      natureSounds.push(val);
-    } else {
-      const idx = natureSounds.indexOf(val);
-      if (idx > -1) natureSounds.splice(idx, 1);
-    }
-  });
-});
-
-$('btnGenNature')?.addEventListener('click', () => {
-  const genre   = $('natureGenre')?.value     || 'Ambient';
-  const mood    = $('natureMood')?.value      || 'Calm';
-  const bpm     = $('natureBpm')?.value       || '70';
-  const layer   = $('natureLayer')?.value     || '3';
-  const intense = $('natureIntensity')?.value || 'Medium';
-  const special = $('natureSpecial')?.value   || '';
-  const sounds  = natureSounds.length ? natureSounds.join(', ') : 'Rain, Birds';
-
-  $('natureOut').value = `🌿 NATURE SOUND PROMPT — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Sounds   : ${sounds}
-Genre    : ${genre}
-Mood     : ${mood}
-BPM      : ${bpm}
-Layers   : ${layer}
-Intensity: ${intense}
-Special  : ${special || 'None'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SUNO PROMPT:
-${genre} ambient music with ${sounds} sounds,
-${mood} mood, ${bpm} BPM, ${intense} intensity,
-${layer}-layer soundscape, ${special || 'organic and natural'},
-high fidelity field recording quality, spatial audio,
-immersive 3D sound, no vocals
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-  $('natureOutputCard')?.classList.remove('hidden');
-});
-
-/* ─────────────────────────────────────────
-   OFFLINE PLAYER
-───────────────────────────────────────── */
-let playlist = [], currentTrack = 0;
-
-$('playerFile')?.addEventListener('change', function () {
-  playlist = Array.from(this.files);
-  if (playlist.length) loadTrack(0);
-});
-
-function loadTrack(idx) {
-  if (!playlist[idx]) return;
-  currentTrack = idx;
-  const file = playlist[idx];
-  const url = URL.createObjectURL(file);
-  const audio = $('mainPlayer');
-  if (audio) { audio.src = url; audio.play(); }
-  const info = $('trackInfo');
-  if (info) info.textContent = `🎵 ${file.name} (${idx + 1}/${playlist.length})`;
-  $('discAnim')?.classList.add('spinning');
-  if ($('btnPlay')) $('btnPlay').textContent = '⏸';
-}
-
-$('btnPlay')?.addEventListener('click', () => {
-  const a = $('mainPlayer');
-  if (!a) return;
-  if (a.paused) {
-    a.play();
-    $('discAnim')?.classList.add('spinning');
-    if ($('btnPlay')) $('btnPlay').textContent = '⏸';
-  } else {
-    a.pause();
-    $('discAnim')?.classList.remove('spinning');
-    if ($('btnPlay')) $('btnPlay').textContent = '▶';
-  }
-});
-
-$('btnPrev')?.addEventListener('click', () => {
-  if (currentTrack > 0) loadTrack(currentTrack - 1);
-});
-$('btnNext')?.addEventListener('click', () => {
-  if (currentTrack < playlist.length - 1) loadTrack(currentTrack + 1);
-});
-$('mainPlayer')?.addEventListener('ended', () => {
-  $('discAnim')?.classList.remove('spinning');
-  if ($('btnPlay')) $('btnPlay').textContent = '▶';
-  if (currentTrack < playlist.length - 1) loadTrack(currentTrack + 1);
-});
-
-/* ─────────────────────────────────────────
-   TAB HANDLING
-───────────────────────────────────────── */
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', function () {
-    const group = this.closest('.tab-group');
-    if (!group) return;
-    group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    const target = this.dataset.tab;
-    group.querySelectorAll('.tab-panel').forEach(p =>
-      p.classList.toggle('active', p.dataset.panel === target)
-    );
-  });
-});
-
-/* ─────────────────────────────────────────
-   NEW COMPOSITION (Help / Analyze)
-───────────────────────────────────────── */
-$('btnGenComposition')?.addEventListener('click', () => {
-  const genre  = $('compGenre')?.value  || 'Classical';
-  const mood   = $('compMood')?.value   || 'Peaceful';
-  const length = $('compLength')?.value || '3 min';
-  const instr  = $('compInstr')?.value  || 'Piano';
-
-  $('compOut').value = `🎼 COMPOSITION OUTLINE — AapkiDhun
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Genre      : ${genre}
-Mood       : ${mood}
-Length     : ${length}
-Instruments: ${instr}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STRUCTURE:
-  0:00 – Intro      (8 bars)  — Establish key & mood
-  0:20 – Verse 1    (16 bars) — Main theme
-  0:50 – Chorus     (8 bars)  — Peak emotion
-  1:10 – Verse 2    (16 bars) — Development
-  1:40 – Bridge     (8 bars)  — Contrast/modulation
-  2:00 – Chorus x2  (16 bars) — Full arrangement
-  2:30 – Outro      (8 bars)  — Resolution & fade
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by AapkiDhun v2.0`;
-  $('compOutputCard')?.classList.remove('hidden');
-});
-
-/* ─────────────────────────────────────────
-   INIT
-───────────────────────────────────────── */
-renderPresets();
-renderMyPresets();
-show('home');
+</script>
+</body>
+</html>
